@@ -24,13 +24,17 @@ const Theme = (() => {
       root.classList.remove('light');
       document.getElementById('appBody').className =
         'bg-[#151726] text-slate-200 min-h-screen flex transition-colors duration-200';
-      if (btn) btn.textContent = '🌙';
+        if (btn) btn.textContent = '🌙';
+      const btn2 = document.getElementById('themeToggleMobile');
+      if (btn2) btn2.textContent = '🌙';
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
       document.getElementById('appBody').className =
         'bg-slate-100 text-slate-800 min-h-screen flex transition-colors duration-200';
       if (btn) btn.textContent = '☀️';
+      const btn2 = document.getElementById('themeToggleMobile');
+      if (btn2) btn2.textContent = '☀️';
     }
   }
 

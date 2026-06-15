@@ -41,8 +41,7 @@ const App = (() => {
   }
 
   function setupNav() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-      // Supprimer les anciens listeners pour éviter les doublons si init() est rappelé
+    document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(link => {
       const newLink = link.cloneNode(true);
       link.parentNode.replaceChild(newLink, link);
       newLink.addEventListener('click', e => { e.preventDefault(); navigate(newLink.dataset.page); });
@@ -64,20 +63,22 @@ const App = (() => {
   }
 
   function refreshJournalSelector() {
-    const sel = document.getElementById('journalSelector');
-    if (!sel) return;
     const journals = Store.journals.all();
     const active   = Store.activeJournal.get();
-    sel.innerHTML  = journals.map(j =>
+    const opts = journals.map(j =>
       `<option value="${j.id}" ${j.id === active ? 'selected' : ''}>${j.name}</option>`
     ).join('');
+    ['journalSelector', 'journalSelectorMobile'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.innerHTML = opts;
+    });
   }
 
   function navigate(page) {
     if (!PAGES[page]) return;
     _currentPage = page;
     location.hash = page;
-    document.querySelectorAll('.nav-link').forEach(l => {
+    document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(l => {
       l.classList.toggle('active', l.dataset.page === page);
     });
     render(page);

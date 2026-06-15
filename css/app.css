@@ -308,3 +308,60 @@
 .light .stat-card      { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .light .page-header    { box-shadow: 0 1px 0 var(--border); }
 .light .data-table tr:hover td { background: #f8fafc; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE — Navigation basse + adaptations
+   ═══════════════════════════════════════════════════════════ */
+
+/* Nav basse mobile */
+.mobile-bottom-nav {
+  display: flex;
+  width: 100%;
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
+}
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.mobile-nav-item span:last-child { font-size: 0.6rem; }
+.mobile-nav-item.active { color: var(--brand); }
+.mobile-nav-item:hover  { color: var(--text-primary); }
+
+/* Header mobile */
+.mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Page: padding adaptatif */
+@media (max-width: 767px) {
+  .page { min-height: unset; }
+  .content-area { padding: 16px; }
+  .page-header  { padding: 14px 16px; }
+
+  /* Modals plein écran sur mobile */
+  .modal-backdrop { align-items: flex-end; }
+  .modal-box {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    padding: 20px 18px;
+    margin: 0;
+  }
+
+  /* Tables scrollables */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table th, .data-table td { padding: 9px 10px; font-size: 0.8rem; white-space: nowrap; }
+
+  /* Grilles → 1 colonne */
+  .mobile-1col { grid-template-columns: 1fr !important; }
+}

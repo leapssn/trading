@@ -123,8 +123,8 @@
   ════════════════════════════════════════════════════════ -->
   <div id="appLayout" class="hidden flex min-h-screen w-full">
 
-    <!-- Sidebar -->
-    <aside class="w-64 sidebar flex flex-col shrink-0">
+    <!-- ── SIDEBAR (desktop uniquement) ── -->
+    <aside class="hidden md:flex w-64 sidebar flex-col shrink-0">
       <div class="px-6 py-5 border-b sidebar-border flex items-center justify-between">
         <h1 class="text-xl font-bold flex items-center gap-2">
           <span class="text-2xl">📈</span>
@@ -132,7 +132,6 @@
         </h1>
       </div>
 
-      <!-- Utilisateur connecté -->
       <div class="px-4 py-3 border-b sidebar-border flex items-center gap-3">
         <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm shrink-0" id="userAvatar">?</div>
         <div class="flex-1 min-w-0">
@@ -141,26 +140,24 @@
         </div>
       </div>
 
-      <!-- Journal selector -->
       <div class="px-4 py-4 border-b sidebar-border">
         <label class="form-label">Journal actif</label>
         <div class="flex gap-2 mt-1">
           <select id="journalSelector" class="flex-1 form-input text-sm"></select>
           <button onclick="App.openModal('journalModal')" title="Nouveau journal"
             class="text-white px-3 py-2 rounded-lg text-sm font-bold transition" style="background:var(--brand)">+</button>
-          <button onclick="Journals.remove(Journals.activeId())" title="Supprimer ce journal"
+          <button onclick="Journals.remove(Journals.activeId())" title="Supprimer"
             class="px-2 py-2 rounded-lg text-sm transition border sidebar-border hover:text-red-400" style="color:var(--text-faint)">🗑️</button>
         </div>
       </div>
 
-      <!-- Navigation -->
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard     </a>
-        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal       </a>
-        <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies    </a>
-        <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions      </a>
-        <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie      </a>
-        <a href="#notebook"   class="nav-link" data-page="notebook">   <span>📝</span> Bloc-notes    </a>
+        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard    </a>
+        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal      </a>
+        <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies   </a>
+        <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions     </a>
+        <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie     </a>
+        <a href="#notebook"   class="nav-link" data-page="notebook">   <span>📝</span> Bloc-notes   </a>
       </nav>
 
       <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
@@ -170,15 +167,41 @@
       </div>
     </aside>
 
-    <!-- Contenu principal -->
-    <main class="flex-1 overflow-auto main-bg flex flex-col">
-      <div id="page-dashboard"  class="page hidden"></div>
-      <div id="page-journal"    class="page hidden"></div>
-      <div id="page-strategies" class="page hidden"></div>
-      <div id="page-calendar"   class="page hidden"></div>
-      <div id="page-economics"  class="page hidden"></div>
-      <div id="page-notebook"   class="page hidden"></div>
-    </main>
+    <!-- ── ZONE CENTRALE ── -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <!-- Header mobile (masqué sur desktop) -->
+      <header class="flex md:hidden items-center justify-between px-4 py-3 border-b shrink-0 mobile-header" style="border-color:var(--border);background:var(--bg-sidebar)">
+        <h1 class="font-bold flex items-center gap-2" style="color:var(--text-primary)">
+          <span>📈</span> TradingLog
+        </h1>
+        <div class="flex items-center gap-2">
+          <select id="journalSelectorMobile" class="form-input text-xs py-1.5 max-w-[130px]"
+            onchange="Store.activeJournal.set(this.value);App.refreshJournalSelector();App.render(App.currentPage)"></select>
+          <button onclick="App.openModal('journalModal')" class="text-white w-7 h-7 rounded-lg text-sm font-bold flex items-center justify-center" style="background:var(--brand)">+</button>
+          <button onclick="Theme.toggle()" id="themeToggleMobile" class="text-lg px-1" style="color:var(--text-faint)">🌙</button>
+        </div>
+      </header>
+
+      <!-- Contenu principal -->
+      <main class="flex-1 overflow-auto main-bg flex flex-col mobile-content">
+        <div id="page-dashboard"  class="page hidden"></div>
+        <div id="page-journal"    class="page hidden"></div>
+        <div id="page-strategies" class="page hidden"></div>
+        <div id="page-calendar"   class="page hidden"></div>
+        <div id="page-economics"  class="page hidden"></div>
+        <div id="page-notebook"   class="page hidden"></div>
+      </main>
+
+      <!-- ── NAVIGATION MOBILE (bas d'écran) ── -->
+      <nav class="flex md:hidden shrink-0 border-t mobile-bottom-nav" style="border-color:var(--border);background:var(--bg-sidebar)">
+        <a href="#dashboard"  class="mobile-nav-item" data-page="dashboard">  <span class="text-xl">🏠</span><span>Home</span>     </a>
+        <a href="#journal"    class="mobile-nav-item" data-page="journal">    <span class="text-xl">📒</span><span>Journal</span>   </a>
+        <a href="#strategies" class="mobile-nav-item" data-page="strategies"> <span class="text-xl">🧠</span><span>Stratégies</span></a>
+        <a href="#economics"  class="mobile-nav-item" data-page="economics">  <span class="text-xl">📰</span><span>Économie</span>  </a>
+        <a href="#notebook"   class="mobile-nav-item" data-page="notebook">   <span class="text-xl">📝</span><span>Notes</span>     </a>
+      </nav>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
