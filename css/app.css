@@ -318,6 +318,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Overlay tiroir */
@@ -341,6 +342,7 @@
   border-right: 1px solid var(--border);
   transform: translateX(0);
   animation: drawerIn 0.22s ease;
+  padding-top: env(safe-area-inset-top);
 }
 @keyframes drawerIn {
   from { transform: translateX(-100%); }
