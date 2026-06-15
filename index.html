@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Journal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', dark: '#4f46e5' },
+            surface: { DEFAULT: '#1e2030', card: '#252840', border: '#2e3256' },
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="bg-[#151726] text-slate-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-64 bg-[#1e2030] border-r border-[#2e3256] flex flex-col shrink-0">
+    <div class="px-6 py-5 border-b border-[#2e3256]">
+      <h1 class="text-xl font-bold text-white flex items-center gap-2">
+        <span class="text-2xl">📈</span> TradingLog
+      </h1>
+    </div>
+
+    <!-- Journal selector -->
+    <div class="px-4 py-4 border-b border-[#2e3256]">
+      <label class="text-xs text-slate-400 uppercase tracking-wider mb-2 block">Journal actif</label>
+      <div class="flex gap-2">
+        <select id="journalSelector" class="flex-1 bg-[#252840] border border-[#2e3256] text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand"></select>
+        <button onclick="App.openModal('journalModal')" title="Nouveau journal" class="bg-brand hover:bg-brand-dark text-white px-3 py-2 rounded-lg text-sm font-bold transition">+</button>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <a href="#dashboard"   class="nav-link" data-page="dashboard">   <span>🏠</span> Dashboard      </a>
+      <a href="#journal"     class="nav-link" data-page="journal">     <span>📒</span> Journal        </a>
+      <a href="#strategies"  class="nav-link" data-page="strategies">  <span>🧠</span> Stratégies     </a>
+      <a href="#calendar"    class="nav-link" data-page="calendar">    <span>🕐</span> Sessions       </a>
+      <a href="#notebook"    class="nav-link" data-page="notebook">    <span>📝</span> Bloc-notes      </a>
+    </nav>
+
+    <div class="px-4 py-3 border-t border-[#2e3256] text-xs text-slate-500">
+      Données sauvées en local
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-auto">
+    <div id="page-dashboard"   class="page hidden"></div>
+    <div id="page-journal"     class="page hidden"></div>
+    <div id="page-strategies"  class="page hidden"></div>
+    <div id="page-calendar"    class="page hidden"></div>
+    <div id="page-notebook"    class="page hidden"></div>
+  </main>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Journal Modal -->
+  <div id="journalModal" class="modal-backdrop hidden">
+    <div class="modal-box w-96">
+      <h2 class="text-lg font-semibold text-white mb-4">Nouveau Journal</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="form-label">Nom du journal</label>
+          <input id="jName" type="text" placeholder="Ex: Compte Principal" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Type de compte</label>
+          <select id="jType" class="form-input">
+            <option value="real">Compte Réel</option>
+            <option value="prop">Prop Firm</option>
+            <option value="demo">Démo</option>
+          </select>
+        </div>
+        <div id="propSection" class="hidden space-y-3">
+          <div>
+            <label class="form-label">Capital initial ($)</label>
+            <input id="jCapital" type="number" placeholder="10000" class="form-input" />
+          </div>
+          <div>
+            <label class="form-label">Drawdown max autorisé (%)</label>
+            <input id="jDrawdown" type="number" placeholder="10" class="form-input" />
+          </div>
+          <div>
+            <label class="form-label">Objectif de profit (%)</label>
+            <input id="jTarget" type="number" placeholder="8" class="form-input" />
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6 justify-end">
+        <button onclick="App.closeModal('journalModal')" class="btn-secondary">Annuler</button>
+        <button onclick="Journals.create()" class="btn-primary">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trade Modal -->
+  <div id="tradeModal" class="modal-backdrop hidden">
+    <div class="modal-box w-[600px]">
+      <h2 class="text-lg font-semibold text-white mb-4" id="tradeModalTitle">Nouveau Trade</h2>
+      <input type="hidden" id="tradeId" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Date / Heure</label>
+          <input id="tDate" type="datetime-local" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Actif</label>
+          <input id="tAsset" type="text" placeholder="EUR/USD, BTC..." class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Sens</label>
+          <select id="tSide" class="form-input">
+            <option value="buy">Achat (Long)</option>
+            <option value="sell">Vente (Short)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Taille / Lots</label>
+          <input id="tSize" type="number" step="0.01" placeholder="0.1" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Prix d'entrée</label>
+          <input id="tEntry" type="number" step="any" placeholder="1.08500" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Prix de sortie</label>
+          <input id="tExit" type="number" step="any" placeholder="1.09000" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">P&L ($)</label>
+          <input id="tPnl" type="number" step="0.01" placeholder="50.00" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Émotions</label>
+          <select id="tEmotion" class="form-input">
+            <option value="">-- Sélectionner --</option>
+            <option value="calm">😌 Calme / Confiant</option>
+            <option value="fear">😰 Peur / Hésitation</option>
+            <option value="greed">🤑 Cupidité / Overtrading</option>
+            <option value="revenge">😤 Revenge Trading</option>
+            <option value="fomo">😱 FOMO</option>
+            <option value="disciplined">💪 Discipliné</option>
+            <option value="bored">😑 Ennui</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Notes</label>
+          <textarea id="tNotes" rows="2" placeholder="Raison d'entrée, setup, observations..." class="form-input resize-none"></textarea>
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Capture d'écran du graphique</label>
+          <div id="dropzone" class="border-2 border-dashed border-[#2e3256] rounded-lg p-4 text-center cursor-pointer hover:border-brand transition">
+            <p class="text-slate-400 text-sm">Glisser-déposer une image ou <span class="text-brand underline">cliquer</span></p>
+            <input type="file" id="tImage" accept="image/*" class="hidden" onchange="Trades.handleImage(event)" />
+            <img id="imagePreview" class="mt-3 max-h-40 mx-auto rounded hidden" />
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6 justify-end">
+        <button onclick="App.closeModal('tradeModal')" class="btn-secondary">Annuler</button>
+        <button onclick="Trades.save()" class="btn-primary">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strategy Modal -->
+  <div id="strategyModal" class="modal-backdrop hidden">
+    <div class="modal-box w-[640px]">
+      <h2 class="text-lg font-semibold text-white mb-4">Fiche Stratégie</h2>
+      <input type="hidden" id="stratId" />
+      <div class="space-y-3">
+        <div>
+          <label class="form-label">Nom de la stratégie</label>
+          <input id="stratName" type="text" placeholder="Ex: Smart Money Concepts" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Contenu (Markdown supporté)</label>
+          <textarea id="stratContent" rows="10" placeholder="## Description&#10;&#10;Décris ta stratégie..." class="form-input resize-none font-mono text-sm"></textarea>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6 justify-end">
+        <button onclick="App.closeModal('strategyModal')" class="btn-secondary">Annuler</button>
+        <button onclick="Strategies.saveCustom()" class="btn-primary">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/journals.js"></script>
+  <script src="js/trades.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/journal-page.js"></script>
+  <script src="js/strategies.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/notebook.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
