@@ -7,12 +7,30 @@ const JournalPage = (() => {
     calm:'😌 Calme', fear:'😰 Peur', greed:'🤑 Cupidité',
     revenge:'😤 Revenge', fomo:'😱 FOMO', disciplined:'💪 Discipliné', bored:'😑 Ennui',
   };
+  const GRADE_COLORS = { A: '#22c55e', B: '#6366f1', C: '#f59e0b' };
+
+  let _search = '';
+  let _month  = '';
+
+  function setSearch(v) { _search = v; render(document.getElementById('page-journal')); }
+  function setMonth(v)  { _month  = v; render(document.getElementById('page-journal')); }
+  function clearFilters() { _search = ''; _month = ''; render(document.getElementById('page-journal')); }
 
   function render(container) {
     const journal = Journals.active();
     const trades  = journal ? Store.trades.forJournal(journal.id) : [];
     const s       = Trades.stats(trades);
-    const sorted  = [...trades].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let sorted = [...trades].sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (_search) {
+      const q = _search.toLowerCase();
+      sorted = sorted.filter(t =>
+        (t.asset||'').toLowerCase().includes(q) ||
+        (t.tags||'').toLowerCase().includes(q) ||
+        (t.notes||'').toLowerCase().includes(q)
+      );
+    }
+    if (_month) sorted = sorted.filter(t => (t.date||'').startsWith(_month));
 
     const typeLabel = { real:'Réel', prop:'Prop Firm', demo:'Démo' }[journal?.type] || '';
     const typeBadge = { real:'badge-real', prop:'badge-prop', demo:'badge-demo' }[journal?.type] || '';
@@ -79,6 +97,12 @@ const JournalPage = (() => {
       const imgBtn   = t.image
         ? `<button onclick="JournalPage.showImage('${t.id}')" class="text-brand underline text-xs">Voir</button>`
         : '<span class="text-xs" style="color:var(--text-faint)">—</span>';
+      const gradeEl  = t.grade
+        ? `<span class="inline-block px-1.5 py-0.5 rounded text-xs font-bold" style="color:${GRADE_COLORS[t.grade]||'var(--text-muted)'};background:${GRADE_COLORS[t.grade]||'#888'}22">${t.grade}</span>`
+        : '<span style="color:var(--text-faint)">—</span>';
+      const tagsEl   = t.tags
+        ? t.tags.split(',').map(tag => `<span class="inline-block px-1.5 py-0.5 mr-1 rounded text-xs" style="background:var(--bg-hover);color:var(--text-muted)">${tag.trim()}</span>`).join('')
+        : '<span style="color:var(--text-faint)">—</span>';
 
       return `
         <tr>
@@ -89,6 +113,8 @@ const JournalPage = (() => {
           <td>${t.entry}</td>
           <td>${t.exit}</td>
           <td class="${pnlClass}">${pnlVal} ${pct}</td>
+          <td>${gradeEl}</td>
+          <td class="max-w-xs">${tagsEl}</td>
           <td style="color:var(--text-faint);font-size:0.8rem">${EMOTIONS[t.emotion] || '—'}</td>
           <td>${imgBtn}</td>
           <td>
@@ -119,11 +145,23 @@ const JournalPage = (() => {
         ${banner}
 
         <!-- KPIs -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           ${kpi('P&L Total',     (s.total>=0?'+':'-')+sym+Math.abs(s.total).toFixed(2), s.total >= 0 ? 'pnl-pos' : 'pnl-neg')}
           ${kpi('Win Rate',      s.winRate.toFixed(1)+'%', '')}
-          ${kpi('Gain moyen',    '+'+sym+s.avgWin.toFixed(2), 'pnl-pos')}
+          ${kpi('Profit Factor', s.profitFactor === Infinity ? '∞' : s.profitFactor.toFixed(2), s.profitFactor >= 1.5 ? 'pnl-pos' : s.profitFactor >= 1 ? '' : 'pnl-neg')}
           ${kpi('Perte moyenne', '-'+sym+Math.abs(s.avgLoss).toFixed(2), 'pnl-neg')}
+        </div>
+
+        <!-- Barre de filtres -->
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <input id="tradeSearch" type="text" placeholder="Rechercher actif, tag, note…"
+            class="form-input flex-1 min-w-[160px] text-sm" value="${_search.replace(/"/g,'&quot;')}"
+            oninput="JournalPage.setSearch(this.value)" />
+          <input id="tradeMonthFilter" type="month"
+            class="form-input text-sm" value="${_month}"
+            onchange="JournalPage.setMonth(this.value)" />
+          ${(_search || _month) ? `<button onclick="JournalPage.clearFilters()" class="btn-secondary text-xs px-3 py-2">✕ Effacer</button>` : ''}
+          <span class="text-xs ml-auto" style="color:var(--text-faint)">${sorted.length} / ${trades.length} trades</span>
         </div>
 
         <!-- Tableau -->
@@ -132,7 +170,7 @@ const JournalPage = (() => {
             <thead>
               <tr>
                 <th>Date</th><th>Actif</th><th>Sens</th><th>Taille</th>
-                <th>Entrée</th><th>Sortie</th><th>P&L</th><th>Émotion</th><th>Chart</th><th></th>
+                <th>Entrée</th><th>Sortie</th><th>P&L</th><th>Note</th><th>Tags</th><th>Émotion</th><th>Chart</th><th></th>
               </tr>
             </thead>
             <tbody>${rows || emptyState}</tbody>
@@ -172,5 +210,5 @@ const JournalPage = (() => {
     document.getElementById('imgViewer').classList.remove('hidden');
   }
 
-  return { render, showImage };
+  return { render, showImage, setSearch, setMonth, clearFilters };
 })();

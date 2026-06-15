@@ -161,10 +161,11 @@
       <nav class="flex-1 px-3 py-4 space-y-1">
         <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard    </a>
         <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal      </a>
+        <a href="#analytics"  class="nav-link" data-page="analytics">  <span>📈</span> Analytiques  </a>
+        <a href="#calculator" class="nav-link" data-page="calculator"> <span>🧮</span> Calculateur  </a>
         <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies   </a>
         <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions     </a>
         <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie     </a>
-        <!-- bloc-notes désactivé temporairement -->
       </nav>
 
       <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
@@ -199,10 +200,11 @@
       <main class="flex-1 overflow-auto main-bg flex flex-col">
         <div id="page-dashboard"  class="page hidden"></div>
         <div id="page-journal"    class="page hidden"></div>
+        <div id="page-analytics"  class="page hidden"></div>
+        <div id="page-calculator" class="page hidden"></div>
         <div id="page-strategies" class="page hidden"></div>
         <div id="page-calendar"   class="page hidden"></div>
         <div id="page-economics"  class="page hidden"></div>
-        <!-- bloc-notes désactivé temporairement -->
       </main>
     </div>
   </div>
@@ -238,6 +240,8 @@
       <nav class="px-3 py-3 space-y-1 flex-1">
         <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span>🏠</span> Dashboard    </button>
         <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span>📒</span> Journal      </button>
+        <button onclick="App.navigate('analytics');App.closeDrawer()"   class="drawer-nav-btn" data-page="analytics">  <span>📈</span> Analytiques  </button>
+        <button onclick="App.navigate('calculator');App.closeDrawer()"  class="drawer-nav-btn" data-page="calculator"> <span>🧮</span> Calculateur  </button>
         <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span>🧠</span> Stratégies   </button>
         <button onclick="App.navigate('calendar');App.closeDrawer()"    class="drawer-nav-btn" data-page="calendar">   <span>🕐</span> Sessions     </button>
         <button onclick="App.navigate('economics');App.closeDrawer()"   class="drawer-nav-btn" data-page="economics">  <span>📰</span> Économie     </button>
@@ -353,13 +357,32 @@
             <option value="bored">😑 Ennui</option>
           </select>
         </div>
-        <div>
-          <label class="form-label">Prix d'entrée</label>
-          <input id="tEntry" type="number" step="any" placeholder="1.08500" class="form-input" oninput="Trades.recalcPnL()" />
+        <div class="col-span-2 grid grid-cols-3 gap-3">
+          <div>
+            <label class="form-label">Prix d'entrée</label>
+            <input id="tEntry" type="number" step="any" placeholder="1.08500" class="form-input" oninput="Trades.recalcPnL()" />
+          </div>
+          <div>
+            <label class="form-label">Prix de sortie</label>
+            <input id="tExit" type="number" step="any" placeholder="1.09200" class="form-input" oninput="Trades.recalcPnL()" />
+          </div>
+          <div>
+            <label class="form-label">Stop Loss</label>
+            <input id="tSL" type="number" step="any" placeholder="1.08000" class="form-input" oninput="Trades.recalcPnL()" />
+          </div>
         </div>
         <div>
-          <label class="form-label">Prix de sortie</label>
-          <input id="tExit" type="number" step="any" placeholder="1.09200" class="form-input" oninput="Trades.recalcPnL()" />
+          <label class="form-label">Note d'exécution</label>
+          <select id="tGrade" class="form-input">
+            <option value="">— Note —</option>
+            <option value="A">A — Excellent</option>
+            <option value="B">B — Bon</option>
+            <option value="C">C — Passable</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Tags</label>
+          <input id="tTags" type="text" placeholder="breakout, s&r, news…" class="form-input" />
         </div>
       </div>
 
@@ -407,21 +430,23 @@
     </div>
   </div>
 
-  <!-- Scripts — v3 (cache bust) -->
-  <script src="js/firebase-config.js?v=4"></script>
-  <script src="js/store.js?v=4"></script>
-  <script src="js/assets.js?v=4"></script>
-  <script src="js/theme.js?v=4"></script>
-  <script src="js/auth.js?v=4"></script>
-  <script src="js/journals.js?v=4"></script>
-  <script src="js/trades.js?v=4"></script>
-  <script src="js/dashboard.js?v=4"></script>
-  <script src="js/journal-page.js?v=4"></script>
-  <script src="js/strategies.js?v=4"></script>
-  <script src="js/calendar.js?v=4"></script>
-  <script src="js/economics.js?v=4"></script>
-  <script src="js/notebook.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <!-- Scripts — v5 (cache bust) -->
+  <script src="js/firebase-config.js?v=5"></script>
+  <script src="js/store.js?v=5"></script>
+  <script src="js/assets.js?v=5"></script>
+  <script src="js/theme.js?v=5"></script>
+  <script src="js/auth.js?v=5"></script>
+  <script src="js/journals.js?v=5"></script>
+  <script src="js/trades.js?v=5"></script>
+  <script src="js/dashboard.js?v=5"></script>
+  <script src="js/journal-page.js?v=5"></script>
+  <script src="js/analytics.js?v=5"></script>
+  <script src="js/calculator.js?v=5"></script>
+  <script src="js/strategies.js?v=5"></script>
+  <script src="js/calendar.js?v=5"></script>
+  <script src="js/economics.js?v=5"></script>
+  <script src="js/notebook.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

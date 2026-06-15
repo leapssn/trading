@@ -138,10 +138,16 @@ const Dashboard = (() => {
 
         <!-- KPIs compte actif -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          ${kpi('P&L Total',  (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'pnl-pos':'pnl-neg', '💰')}
-          ${kpi('Win Rate',   as.winRate.toFixed(1)+'%', '', '🎯')}
-          ${kpi('Trades',     as.count, '', '📊')}
-          ${kpi('Gain moyen', '+'+sym+as.avgWin.toFixed(2), 'pnl-pos', '⬆️')}
+          ${kpi('P&L Total',      (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'pnl-pos':'pnl-neg', '💰')}
+          ${kpi('Win Rate',       as.winRate.toFixed(1)+'%', '', '🎯')}
+          ${kpi('Trades',         as.count, '', '📊')}
+          ${kpi('Gain moyen',     '+'+sym+as.avgWin.toFixed(2), 'pnl-pos', '⬆️')}
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          ${kpi('Profit Factor',  as.profitFactor === Infinity ? '∞' : as.profitFactor.toFixed(2), as.profitFactor >= 1.5 ? 'pnl-pos' : as.profitFactor >= 1 ? '' : 'pnl-neg', '⚖️')}
+          ${kpi('R:R moyen',      as.avgRR != null ? '1:'+as.avgRR : '—', as.avgRR != null && as.avgRR >= 1 ? 'pnl-pos' : '', '📐')}
+          ${kpi('Drawdown max',   as.maxDrawdown.toFixed(1)+'%', 'pnl-neg', '📉')}
+          ${kpi('Série',          as.streak === 0 ? '—' : (as.streak > 0 ? '+'+as.streak+' wins' : as.streak+' losses'), as.streak > 0 ? 'pnl-pos' : as.streak < 0 ? 'pnl-neg' : '', '🔥')}
         </div>
 
         <!-- Graphes compte actif -->

@@ -14,7 +14,8 @@ const Trades = (() => {
     document.getElementById('tAssetCustom').value  = '';
     document.getElementById('tSide').value         = 'buy';
     document.getElementById('tEmotion').value      = '';
-    ['tSize','tEntry','tExit','tNotes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('tGrade').value        = '';
+    ['tSize','tEntry','tExit','tSL','tNotes','tTags'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('imagePreview').classList.add('hidden');
     resetPnlDisplay();
     App.openModal('tradeModal');
@@ -32,6 +33,9 @@ const Trades = (() => {
     document.getElementById('tEntry').value        = t.entry;
     document.getElementById('tExit').value         = t.exit;
     document.getElementById('tEmotion').value      = t.emotion;
+    document.getElementById('tSL').value           = t.sl || '';
+    document.getElementById('tGrade').value        = t.grade || '';
+    document.getElementById('tTags').value         = t.tags || '';
     document.getElementById('tNotes').value        = t.notes;
 
     const inCatalog = Assets.getBySymbol(t.asset);
@@ -51,13 +55,18 @@ const Trades = (() => {
     const side   = document.getElementById('tSide')?.value;
     const entry  = parseFloat(document.getElementById('tEntry')?.value);
     const exit   = parseFloat(document.getElementById('tExit')?.value);
+    const sl     = parseFloat(document.getElementById('tSL')?.value) || null;
     const size   = parseFloat(document.getElementById('tSize')?.value);
     if (!entry || !exit || !size) { resetPnlDisplay(); return; }
     const result = Assets.calcPnL(symbol, side, entry, exit, size);
-    updatePnlDisplay(result.pnlUSD, result.pnlPct, result.pips, result.quoteSymbol);
+    let rr = null;
+    if (sl && Math.abs(entry - sl) > 0) {
+      rr = +(Math.abs(exit - entry) / Math.abs(entry - sl)).toFixed(2);
+    }
+    updatePnlDisplay(result.pnlUSD, result.pnlPct, result.pips, result.quoteSymbol, rr);
   }
 
-  function updatePnlDisplay(pnlUSD, pnlPct, pips, quoteSymbol) {
+  function updatePnlDisplay(pnlUSD, pnlPct, pips, quoteSymbol, rr) {
     const box = document.getElementById('pnlPreview');
     if (!box || pnlUSD == null) { resetPnlDisplay(); return; }
     const sign  = pnlUSD >= 0 ? '+' : '';
@@ -71,6 +80,7 @@ const Trades = (() => {
         </div>
         ${pnlPct != null ? `<div><div class="form-label">Variation</div><div class="text-xl font-bold" style="color:${color}">${sign}${pnlPct.toFixed(3)}%</div></div>` : ''}
         ${pips ? `<div><div class="form-label">Pips / Points</div><div class="text-xl font-bold" style="color:${color}">${sign}${pips}</div></div>` : ''}
+        ${rr != null ? `<div><div class="form-label">R:R</div><div class="text-xl font-bold" style="color:${rr >= 1 ? '#22c55e' : '#f59e0b'}">1 : ${rr}</div></div>` : ''}
       </div>`;
     box.classList.remove('hidden');
   }
@@ -91,6 +101,9 @@ const Trades = (() => {
     const exit   = parseFloat(document.getElementById('tExit').value)  || 0;
     const size   = parseFloat(document.getElementById('tSize').value)  || 0;
     const calc   = Assets.calcPnL(symbol, side, entry, exit, size);
+    const sl     = parseFloat(document.getElementById('tSL').value) || null;
+    let rr = null;
+    if (sl && Math.abs(entry - sl) > 0) rr = +(Math.abs(exit - entry) / Math.abs(entry - sl)).toFixed(2);
 
     if (!symbol) { alert('Veuillez sélectionner un actif.'); return; }
 
@@ -103,13 +116,15 @@ const Trades = (() => {
       journalId,
       date:        document.getElementById('tDate').value,
       asset:       symbol,
-      side, size, entry, exit,
+      side, size, entry, exit, sl, rr,
       pnl:         calc.pnlUSD,
       pnlUSD:      calc.pnlUSD,
       pnlPct:      calc.pnlPct,
       pips:        calc.pips,
       quoteSymbol: calc.quoteSymbol,
       emotion:     document.getElementById('tEmotion').value,
+      grade:       document.getElementById('tGrade').value || null,
+      tags:        document.getElementById('tTags').value.trim() || null,
       notes:       document.getElementById('tNotes').value.trim(),
       image:       _imageData,
       createdAt:   new Date().toISOString(),
@@ -177,7 +192,30 @@ const Trades = (() => {
     const winRate = tradeList.length ? (wins.length / tradeList.length * 100) : 0;
     const avgWin  = wins.length   ? wins.reduce((s,t)  => s + t.pnl, 0) / wins.length   : 0;
     const avgLoss = losses.length ? losses.reduce((s,t) => s + t.pnl, 0) / losses.length : 0;
-    return { total, wins: wins.length, losses: losses.length, count: tradeList.length, winRate, avgWin, avgLoss };
+
+    const grossProfit  = wins.reduce((s,t) => s + t.pnl, 0);
+    const grossLoss    = Math.abs(losses.reduce((s,t) => s + t.pnl, 0));
+    const profitFactor = grossLoss > 0 ? +(grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? Infinity : 0);
+
+    const rrTrades = tradeList.filter(t => t.rr != null && t.rr > 0);
+    const avgRR    = rrTrades.length ? +(rrTrades.reduce((s,t) => s + t.rr, 0) / rrTrades.length).toFixed(2) : null;
+
+    const sorted = [...tradeList].sort((a,b) => new Date(a.date) - new Date(b.date));
+    let streak = 0;
+    if (sorted.length) {
+      const lastDir = sorted[sorted.length-1].pnl >= 0 ? 1 : -1;
+      for (let i = sorted.length-1; i >= 0; i--) {
+        if ((sorted[i].pnl >= 0 ? 1 : -1) === lastDir) streak += lastDir;
+        else break;
+      }
+    }
+
+    let peak = 0, cumPnl = 0;
+    const drawdownSeries  = sorted.map(t => { cumPnl += t.pnl || 0; if (cumPnl > peak) peak = cumPnl; return peak > 0 ? +((cumPnl - peak) / peak * 100).toFixed(2) : 0; });
+    const drawdownLabels  = sorted.map(t => (t.date || '').slice(0, 10));
+    const maxDrawdown     = drawdownSeries.length ? Math.min(0, ...drawdownSeries) : 0;
+
+    return { total, wins: wins.length, losses: losses.length, count: tradeList.length, winRate, avgWin, avgLoss, profitFactor, avgRR, streak, drawdownSeries, drawdownLabels, maxDrawdown };
   }
 
   return { openNew, openEdit, save, remove, handleImage, setupDropzone, stats, recalcPnL, onCustomAsset };

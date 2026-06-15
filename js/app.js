@@ -10,7 +10,8 @@ const App = (() => {
     strategies: { render: c => Strategies.render(c)     },
     calendar:   { render: c => MarketCalendar.render(c) },
     economics:  { render: c => Economics.render(c)      },
-    // notebook désactivé temporairement
+    analytics:  { render: c => Analytics.render(c)      },
+    calculator: { render: c => Calculator.render(c)     },
   };
 
   function init() {
