@@ -15,11 +15,25 @@ const Calculator = (() => {
           <!-- Formulaire -->
           <div class="stat-card space-y-4">
             <h3 class="text-sm font-semibold" style="color:var(--text-muted)">Paramètres</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2">
                 <label class="form-label">Capital</label>
                 <input id="calcCapital" type="number" step="any" min="0" placeholder="10000" class="form-input" oninput="Calculator.calculate()" />
               </div>
+              <div>
+                <label class="form-label">Devise</label>
+                <select id="calcCurrency" class="form-input" onchange="Calculator.calculate()">
+                  <option value="$">🇺🇸 USD $</option>
+                  <option value="€">🇪🇺 EUR €</option>
+                  <option value="£">🇬🇧 GBP £</option>
+                  <option value="CHF ">🇨🇭 CHF</option>
+                  <option value="CA$">🇨🇦 CAD</option>
+                  <option value="A$">🇦🇺 AUD</option>
+                  <option value="¥">🇯🇵 JPY ¥</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="form-label">Risque par trade (%)</label>
                 <input id="calcRisk" type="number" step="0.1" min="0.1" max="100" placeholder="1" class="form-input" oninput="Calculator.calculate()" />
@@ -91,13 +105,14 @@ const Calculator = (() => {
   }
 
   function calculate() {
-    const capital = parseFloat(document.getElementById('calcCapital')?.value);
-    const riskPct = parseFloat(document.getElementById('calcRisk')?.value);
-    const entry   = parseFloat(document.getElementById('calcEntry')?.value);
-    const sl      = parseFloat(document.getElementById('calcSL')?.value);
-    const tp      = parseFloat(document.getElementById('calcTP')?.value);
-    const pipVal  = parseFloat(document.getElementById('calcPipVal')?.value);
-    const results = document.getElementById('calcResults');
+    const capital  = parseFloat(document.getElementById('calcCapital')?.value);
+    const riskPct  = parseFloat(document.getElementById('calcRisk')?.value);
+    const entry    = parseFloat(document.getElementById('calcEntry')?.value);
+    const sl       = parseFloat(document.getElementById('calcSL')?.value);
+    const tp       = parseFloat(document.getElementById('calcTP')?.value);
+    const pipVal   = parseFloat(document.getElementById('calcPipVal')?.value);
+    const sym      = document.getElementById('calcCurrency')?.value || '$';
+    const results  = document.getElementById('calcResults');
     if (!results) return;
 
     if (!capital || !riskPct || !entry || !sl) {
@@ -139,11 +154,11 @@ const Calculator = (() => {
     results.innerHTML = `
       <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Résultats</h3>
       <div class="space-y-0">
-        ${row('Montant risqué',     riskAmount.toFixed(2), riskColor)}
+        ${row('Montant risqué',     sym + riskAmount.toFixed(2), riskColor)}
         ${row('Distance au SL',     distLabel)}
         ${row('Taille de position', lotsStr, '#6366f1')}
         ${rrStr !== '—' ? row('Ratio R:R',         '1 : ' + rrStr, rrColor) : ''}
-        ${gainStr !== '—' ? row('Gain potentiel',  gainStr, '#22c55e') : ''}
+        ${gainStr !== '—' ? row('Gain potentiel',  sym + gainStr, '#22c55e') : ''}
       </div>
       <div class="mt-4 p-3 rounded-lg text-xs" style="background:var(--bg-input);color:var(--text-faint)">
         Risque : <span style="color:${riskColor};font-weight:600">${riskPct}% du capital</span>
