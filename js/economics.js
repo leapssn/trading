@@ -356,24 +356,30 @@ const Economics = (() => {
   }
 
   // ── Chargement des events ──────────────────────────────────
+  function fetchTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const id   = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(id));
+  }
+
   async function loadEvents() {
     if (_cachedEvents) { renderEvents(_cachedEvents); return; }
     let data = null;
 
     // 1) Fichier local mis à jour par GitHub Actions (même origine, pas de CORS)
     try {
-      const res = await fetch(LOCAL_DATA + '?t=' + Date.now(), { signal: AbortSignal.timeout(5000) });
+      const res = await fetchTimeout(LOCAL_DATA + '?t=' + Date.now(), 5000);
       if (res.ok) {
         const json = await res.json();
         if (Array.isArray(json) && json.length > 0) data = json;
       }
     } catch { /* pas disponible, on continue */ }
 
-    // 2) Si le fichier local est vide ou absent → proxies externes
+    // 2) Si le fichier local est vide → proxies externes
     if (!data) {
       for (const proxyFn of PROXIES) {
         try {
-          const res = await fetch(proxyFn(FF_URL), { signal: AbortSignal.timeout(8000) });
+          const res = await fetchTimeout(proxyFn(FF_URL), 8000);
           if (!res.ok) continue;
           const text = await res.text();
           let parsed = JSON.parse(text);
