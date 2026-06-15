@@ -8,6 +8,7 @@ const Calculator = (() => {
   // lot      = description d'1 lot standard
   const INSTRUMENTS = {
     'Forex': {
+      // — Majeurs USD —
       'EURUSD':  { pipSize: 0.0001, pipVal: 10,   lot: '100 000 €' },
       'GBPUSD':  { pipSize: 0.0001, pipVal: 10,   lot: '100 000 £' },
       'AUDUSD':  { pipSize: 0.0001, pipVal: 10,   lot: '100 000 A$' },
@@ -15,13 +16,50 @@ const Calculator = (() => {
       'USDCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 $' },
       'USDCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 $' },
       'USDJPY':  { pipSize: 0.01,   pipVal: 9.1,  lot: '100 000 $' },
+      // — Croisés EUR —
       'EURGBP':  { pipSize: 0.0001, pipVal: 12.5, lot: '100 000 €' },
       'EURCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 €' },
       'EURJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 €' },
+      'EURAUD':  { pipSize: 0.0001, pipVal: 6.5,  lot: '100 000 €' },
+      'EURCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 €' },
+      'EURNZD':  { pipSize: 0.0001, pipVal: 6.0,  lot: '100 000 €' },
+      'EURSEK':  { pipSize: 0.0001, pipVal: 0.95, lot: '100 000 €' },
+      'EURNOK':  { pipSize: 0.0001, pipVal: 0.95, lot: '100 000 €' },
+      'EURDKK':  { pipSize: 0.0001, pipVal: 1.45, lot: '100 000 €' },
+      'EURPLN':  { pipSize: 0.0001, pipVal: 2.5,  lot: '100 000 €' },
+      'EURHUF':  { pipSize: 0.01,   pipVal: 0.28, lot: '100 000 €' },
+      // — Croisés GBP —
       'GBPJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 £' },
-      'CADJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 CA$' },
-      'AUDCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 A$' },
       'GBPCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 £' },
+      'GBPAUD':  { pipSize: 0.0001, pipVal: 6.5,  lot: '100 000 £' },
+      'GBPCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 £' },
+      'GBPNZD':  { pipSize: 0.0001, pipVal: 6.0,  lot: '100 000 £' },
+      // — Croisés AUD —
+      'AUDJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 A$' },
+      'AUDCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 A$' },
+      'AUDCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 A$' },
+      'AUDNZD':  { pipSize: 0.0001, pipVal: 6.0,  lot: '100 000 A$' },
+      // — Croisés NZD —
+      'NZDJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 NZ$' },
+      'NZDCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 NZ$' },
+      'NZDCAD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 NZ$' },
+      // — Croisés CAD —
+      'CADJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 CA$' },
+      'CADCHF':  { pipSize: 0.0001, pipVal: 11,   lot: '100 000 CA$' },
+      // — Croisés CHF —
+      'CHFJPY':  { pipSize: 0.01,   pipVal: 6.8,  lot: '100 000 CHF' },
+      // — Exotiques USD —
+      'USDMXN':  { pipSize: 0.0001, pipVal: 0.55, lot: '100 000 $' },
+      'USDZAR':  { pipSize: 0.0001, pipVal: 0.55, lot: '100 000 $' },
+      'USDTRY':  { pipSize: 0.0001, pipVal: 0.3,  lot: '100 000 $' },
+      'USDSEK':  { pipSize: 0.0001, pipVal: 0.95, lot: '100 000 $' },
+      'USDNOK':  { pipSize: 0.0001, pipVal: 0.95, lot: '100 000 $' },
+      'USDDKK':  { pipSize: 0.0001, pipVal: 1.45, lot: '100 000 $' },
+      'USDSGD':  { pipSize: 0.0001, pipVal: 7.5,  lot: '100 000 $' },
+      'USDHKD':  { pipSize: 0.0001, pipVal: 1.28, lot: '100 000 $' },
+      'USDPLN':  { pipSize: 0.0001, pipVal: 2.5,  lot: '100 000 $' },
+      'USDCZK':  { pipSize: 0.001,  pipVal: 0.45, lot: '100 000 $' },
+      'USDHUF':  { pipSize: 0.01,   pipVal: 0.28, lot: '100 000 $' },
     },
     'Métaux': {
       'XAUUSD (Or)':     { pipSize: 0.01,  pipVal: 1,  lot: '100 oz' },
