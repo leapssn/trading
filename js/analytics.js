@@ -40,19 +40,19 @@ const Analytics = (() => {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <div class="stat-card">
-            <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Répartition des notes</h3>
-            <canvas id="anlGradeChart" height="160"></canvas>
+            <h3 class="text-sm font-semibold mb-3" style="color:var(--text-muted)">Répartition des notes</h3>
+            <canvas id="anlGradeChart" height="110"></canvas>
           </div>
           <div class="stat-card">
-            <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Win Rate par note</h3>
-            <canvas id="anlGradeWrChart" height="160"></canvas>
+            <h3 class="text-sm font-semibold mb-3" style="color:var(--text-muted)">Win Rate par note</h3>
+            <canvas id="anlGradeWrChart" height="110"></canvas>
           </div>
         </div>
 
         <div class="stat-card">
-          <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Heatmap — 16 dernières semaines</h3>
+          <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Heatmap de performance — 26 dernières semaines</h3>
           <div id="anlHeatmap" class="overflow-x-auto"></div>
         </div>
 
@@ -196,9 +196,11 @@ const Analytics = (() => {
       const d = (t.date || '').slice(0, 10);
       if (d) byDate[d] = (byDate[d] || 0) + (t.pnl || 0);
     });
+    const S = 18; // taille d'une cellule en px
+    const G = 3;  // gap entre cellules
     const today = new Date();
     const start = new Date(today);
-    start.setDate(start.getDate() - 15 * 7);
+    start.setDate(start.getDate() - 25 * 7);
     while (start.getDay() !== 1) start.setDate(start.getDate() - 1);
     const weeks = [];
     const cur = new Date(start);
@@ -216,33 +218,34 @@ const Analytics = (() => {
     const monthMap = {};
     weeks.forEach((w, wi) => { const m = w[0].date.slice(0, 7); if (!monthMap[m]) monthMap[m] = wi; });
     const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    const cell = (day) => {
+      if (day.future) return `<div style="width:${S}px;height:${S}px"></div>`;
+      let bg = 'var(--bg-input)';
+      if (day.pnl !== null) {
+        const alpha = Math.round(55 + Math.min(1, Math.abs(day.pnl) / maxPnl) * 185).toString(16).padStart(2, '0');
+        bg = day.pnl >= 0 ? `#22c55e${alpha}` : `#ef4444${alpha}`;
+      }
+      const tip = day.pnl !== null ? `${day.date}: ${day.pnl >= 0 ? '+' : ''}${day.pnl.toFixed(2)}` : day.date;
+      return `<div title="${tip}" style="width:${S}px;height:${S}px;border-radius:4px;background:${bg};cursor:default"></div>`;
+    };
     const cells = weeks.map(week => `
-      <div class="flex flex-col gap-0.5">
-        ${week.map(day => {
-          if (day.future) return `<div style="width:14px;height:14px"></div>`;
-          let bg = 'var(--bg-input)';
-          if (day.pnl !== null) {
-            const alpha = Math.round(55 + Math.min(1, Math.abs(day.pnl) / maxPnl) * 185).toString(16).padStart(2, '0');
-            bg = day.pnl >= 0 ? `#22c55e${alpha}` : `#ef4444${alpha}`;
-          }
-          const tip = day.pnl !== null ? `${day.date}: ${day.pnl >= 0 ? '+' : ''}${day.pnl.toFixed(2)}` : day.date;
-          return `<div title="${tip}" style="width:14px;height:14px;border-radius:3px;background:${bg}"></div>`;
-        }).join('')}
+      <div style="display:flex;flex-direction:column;gap:${G}px">
+        ${week.map(day => cell(day)).join('')}
       </div>`).join('');
     container.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:4px">
-        <div class="flex flex-col gap-0.5 pt-5 shrink-0">
-          ${dayLabels.map(l => `<div style="width:14px;height:14px;font-size:9px;color:var(--text-faint);text-align:center;line-height:14px">${l}</div>`).join('')}
+      <div style="display:flex;align-items:flex-start;gap:6px">
+        <div style="display:flex;flex-direction:column;gap:${G}px;padding-top:${S+6}px;flex-shrink:0">
+          ${dayLabels.map(l => `<div style="width:${S}px;height:${S}px;font-size:10px;color:var(--text-faint);text-align:center;line-height:${S}px">${l}</div>`).join('')}
         </div>
         <div>
-          <div style="display:flex;margin-bottom:4px">
+          <div style="display:flex;gap:0;margin-bottom:6px">
             ${weeks.map((w, wi) => {
               const m = w[0].date.slice(0, 7);
               const label = monthMap[m] === wi ? new Date(w[0].date + 'T12:00').toLocaleDateString('fr-FR', { month: 'short' }) : '';
-              return `<div style="width:14px;font-size:9px;color:var(--text-faint);text-align:center">${label}</div>`;
+              return `<div style="width:${S + G}px;font-size:10px;color:var(--text-faint);text-align:center">${label}</div>`;
             }).join('')}
           </div>
-          <div style="display:flex;gap:1px">${cells}</div>
+          <div style="display:flex;gap:${G}px">${cells}</div>
         </div>
       </div>
       <div class="flex items-center gap-2 mt-3 text-xs flex-wrap" style="color:var(--text-faint)">
