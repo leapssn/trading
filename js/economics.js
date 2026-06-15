@@ -4,9 +4,13 @@
 const Economics = (() => {
 
   const FF_URL  = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+  // Essai direct d'abord, puis plusieurs proxies en fallback
   const PROXIES = [
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => url,                                                               // direct (si FF a CORS)
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,               // proxy 1
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,  // proxy 2
+    url => `https://api.codetabs.com/v1/proxy?quest=${url}`,                 // proxy 3
+    url => `https://thingproxy.freeboard.io/fetch/${url}`,                   // proxy 4
   ];
 
   let _filterCurrency = null;
@@ -371,7 +375,10 @@ const Economics = (() => {
         <div class="stat-card text-center py-10">
           <p class="text-3xl mb-3">🌐</p>
           <p class="font-medium mb-2" style="color:var(--text-primary)">Impossible de charger les annonces</p>
-          <p class="text-sm mb-4" style="color:var(--text-faint)">Vérifiez votre connexion ou réessayez.</p>
+          <p class="text-sm mb-3" style="color:var(--text-faint)">
+            Si vous avez un bloqueur de publicités (uBlock, AdBlock…), il bloque peut-être les requêtes vers les proxies.<br>
+            Essayez de le désactiver temporairement sur cette page.
+          </p>
           <button onclick="Economics.reload()" class="btn-primary text-sm">Réessayer</button>
         </div>`;
       return;
