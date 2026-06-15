@@ -1,12 +1,12 @@
 // ============================================================
-// journals.js — Gestion des journaux (création, suppression)
+// journals.js — Gestion des journaux
 // ============================================================
 const Journals = (() => {
 
-  function create() {
-    const name     = document.getElementById('jName').value.trim();
-    const type     = document.getElementById('jType').value;
-    const capital  = parseFloat(document.getElementById('jCapital').value)   || 0;
+  async function create() {
+    const name      = document.getElementById('jName').value.trim();
+    const type      = document.getElementById('jType').value;
+    const capital   = parseFloat(document.getElementById('jCapital').value) || 0;
 
     if (!name) { alert('Veuillez entrer un nom pour le journal.'); return; }
 
@@ -18,26 +18,30 @@ const Journals = (() => {
       createdAt: new Date().toISOString(),
     };
 
-    // Champs spécifiques Prop Firm
     if (type === 'prop') {
-      journal.drawdown    = parseFloat(document.getElementById('jDrawdown').value)    || 0;
-      journal.target      = parseFloat(document.getElementById('jTarget').value)      || 0;
-      journal.dailyLoss   = parseFloat(document.getElementById('jDailyLoss').value)   || 0;
+      journal.drawdown  = parseFloat(document.getElementById('jDrawdown').value)  || 0;
+      journal.dailyLoss = parseFloat(document.getElementById('jDailyLoss').value) || 0;
+      journal.target    = parseFloat(document.getElementById('jTarget').value)    || 0;
     }
 
-    Store.journals.add(journal);
+    await Store.journals.add(journal);
     Store.activeJournal.set(journal.id);
     App.closeModal('journalModal');
     App.refreshJournalSelector();
     App.render(App.currentPage);
   }
 
-  function remove(id) {
+  async function remove(id) {
     const list = Store.journals.all();
     if (list.length <= 1) { alert('Vous devez garder au moins un journal.'); return; }
     if (!confirm('Supprimer ce journal et tous ses trades ? Cette action est irréversible.')) return;
-    Store.journals.delete(id);
-    Store.trades.save(Store.trades.all().filter(t => t.journalId !== id));
+
+    await Store.journals.delete(id);
+
+    // Supprimer les trades liés
+    const linked = Store.trades.all().filter(t => t.journalId === id);
+    await Promise.all(linked.map(t => Store.trades.delete(t.id)));
+
     const remaining = Store.journals.all();
     Store.activeJournal.set(remaining[0].id);
     App.refreshJournalSelector();

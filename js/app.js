@@ -1,5 +1,5 @@
 // ============================================================
-// app.js — Routeur principal & initialisation
+// app.js — Routeur principal (appelé par Auth après connexion)
 // ============================================================
 const App = (() => {
   let _currentPage = 'dashboard';
@@ -14,12 +14,13 @@ const App = (() => {
   };
 
   function init() {
-    // Thème
-    Theme.init();
-
-    // Journal par défaut
+    // Créer un journal par défaut si l'utilisateur n'en a aucun
     if (Store.journals.all().length === 0) {
-      const j = { id: Store.uid(), name: 'Mon Journal', type: 'real', capital: 0, createdAt: new Date().toISOString() };
+      const j = {
+        id: Store.uid(), name: 'Mon Journal',
+        type: 'real', capital: 0,
+        createdAt: new Date().toISOString(),
+      };
       Store.journals.add(j);
       Store.activeJournal.set(j.id);
     }
@@ -29,36 +30,37 @@ const App = (() => {
 
     refreshJournalSelector();
     setupNav();
-    setupJournalModal();
+    setupJournalSelector();
     populateAssetSelect();
 
-    const hash = location.hash.replace('#', '') || 'dashboard';
+    const hash = location.hash.replace('#', '');
     navigate(PAGES[hash] ? hash : 'dashboard');
 
+    // Rafraîchir les sessions toutes les minutes
     setInterval(() => { if (_currentPage === 'calendar') render('calendar'); }, 60000);
   }
 
   function setupNav() {
     document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        navigate(link.dataset.page);
-      });
+      // Supprimer les anciens listeners pour éviter les doublons si init() est rappelé
+      const newLink = link.cloneNode(true);
+      link.parentNode.replaceChild(newLink, link);
+      newLink.addEventListener('click', e => { e.preventDefault(); navigate(newLink.dataset.page); });
     });
   }
 
-  function setupJournalModal() {
-    document.getElementById('journalSelector')?.addEventListener('change', e => {
+  function setupJournalSelector() {
+    const sel = document.getElementById('journalSelector');
+    if (!sel) return;
+    sel.onchange = e => {
       Store.activeJournal.set(e.target.value);
       render(_currentPage);
-    });
+    };
   }
 
-  // Remplit le <select> des actifs dans la modal Trade
   function populateAssetSelect() {
     const sel = document.getElementById('tAsset');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">— Sélectionner un instrument —</option>' + Assets.buildSelectHTML();
+    if (sel) sel.innerHTML = '<option value="">— Sélectionner un instrument —</option>' + Assets.buildSelectHTML();
   }
 
   function refreshJournalSelector() {
@@ -66,7 +68,7 @@ const App = (() => {
     if (!sel) return;
     const journals = Store.journals.all();
     const active   = Store.activeJournal.get();
-    sel.innerHTML = journals.map(j =>
+    sel.innerHTML  = journals.map(j =>
       `<option value="${j.id}" ${j.id === active ? 'selected' : ''}>${j.name}</option>`
     ).join('');
   }
@@ -82,9 +84,7 @@ const App = (() => {
   }
 
   function render(page) {
-    Object.keys(PAGES).forEach(p => {
-      document.getElementById(`page-${p}`)?.classList.add('hidden');
-    });
+    Object.keys(PAGES).forEach(p => document.getElementById(`page-${p}`)?.classList.add('hidden'));
     const container = document.getElementById(`page-${page}`);
     if (!container) return;
     container.classList.remove('hidden');
@@ -94,6 +94,7 @@ const App = (() => {
   function openModal(id)  { document.getElementById(id)?.classList.remove('hidden'); }
   function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
 
+  // Fermer les modals en cliquant sur le fond
   document.addEventListener('click', e => {
     if (e.target.classList.contains('modal-backdrop')) e.target.classList.add('hidden');
   });
@@ -107,5 +108,3 @@ const App = (() => {
     get currentPage() { return _currentPage; },
   };
 })();
-
-document.addEventListener('DOMContentLoaded', () => App.init());

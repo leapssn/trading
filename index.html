@@ -6,90 +6,194 @@
   <title>Trading Journal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { DEFAULT: '#6366f1', dark: '#4f46e5' },
-          }
-        }
-      }
-    }
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { DEFAULT: '#6366f1', dark: '#4f46e5' } } } } }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
   <link rel="stylesheet" href="css/app.css" />
 </head>
-<body id="appBody" class="bg-[#151726] text-slate-200 min-h-screen flex transition-colors duration-200">
+<body id="appBody" class="min-h-screen transition-colors duration-200" style="background:var(--bg-main);color:var(--text-primary)">
 
   <!-- ═══════════════════════════════════════════════════════
-       SIDEBAR
+       ÉCRAN DE CHARGEMENT
   ════════════════════════════════════════════════════════ -->
-  <aside id="sidebar" class="w-64 sidebar flex flex-col shrink-0">
-    <!-- Logo -->
-    <div class="px-6 py-5 border-b sidebar-border">
-      <h1 class="text-xl font-bold flex items-center gap-2">
-        <span class="text-2xl">📈</span>
-        <span class="sidebar-title">TradingLog</span>
-      </h1>
-    </div>
+  <div id="loadingScreen" class="fixed inset-0 flex flex-col items-center justify-center z-50" style="background:var(--bg-main)">
+    <div class="text-4xl mb-4">📈</div>
+    <div class="text-xl font-bold mb-6" style="color:var(--text-primary)">TradingLog</div>
+    <div class="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-4 text-sm" style="color:var(--text-faint)">Chargement de vos données…</p>
+  </div>
 
-    <!-- Journal selector -->
-    <div class="px-4 py-4 border-b sidebar-border">
-      <label class="form-label">Journal actif</label>
-      <div class="flex gap-2 mt-1">
-        <select id="journalSelector" class="flex-1 form-input text-sm"></select>
-        <button onclick="App.openModal('journalModal')" title="Nouveau journal"
-          class="bg-brand hover:bg-brand-dark text-white px-3 py-2 rounded-lg text-sm font-bold transition">+</button>
-        <button onclick="Journals.remove(Journals.activeId())" title="Supprimer ce journal"
-          class="text-slate-500 hover:text-red-400 px-2 py-2 rounded-lg text-sm transition border sidebar-border hover:border-red-500/50">🗑️</button>
+  <!-- ═══════════════════════════════════════════════════════
+       ÉCRAN D'AUTHENTIFICATION
+  ════════════════════════════════════════════════════════ -->
+  <div id="authScreen" class="hidden fixed inset-0 flex items-center justify-center p-4" style="background:var(--bg-main)">
+    <div class="w-full max-w-sm">
+
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="text-5xl mb-3">📈</div>
+        <h1 class="text-2xl font-bold" style="color:var(--text-primary)">TradingLog</h1>
+        <p class="text-sm mt-1" style="color:var(--text-faint)">Votre journal de trading personnel</p>
+      </div>
+
+      <!-- Card -->
+      <div class="stat-card">
+        <h2 id="authTitle" class="text-lg font-semibold mb-5" style="color:var(--text-primary)">Connexion</h2>
+
+        <!-- Erreur -->
+        <div id="authError" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+
+        <!-- Champ nom (inscription seulement) -->
+        <div id="authNameRow" class="hidden mb-3">
+          <label class="form-label">Prénom / Pseudo</label>
+          <input id="authName" type="text" placeholder="Ex: Alex" class="form-input" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input id="authEmail" type="email" placeholder="vous@email.com" class="form-input"
+            onkeydown="if(event.key==='Enter') Auth.submit()" />
+        </div>
+
+        <div class="mb-1">
+          <label class="form-label">Mot de passe</label>
+          <div class="relative">
+            <input id="authPassword" type="password" placeholder="••••••••" class="form-input pr-10"
+              onkeydown="if(event.key==='Enter') Auth.submit()" />
+            <button onclick="togglePwd('authPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--text-faint)">👁</button>
+          </div>
+        </div>
+
+        <!-- Mot de passe oublié -->
+        <div class="text-right mb-4">
+          <button onclick="Auth.resetPassword()" class="text-xs hover:underline" style="color:var(--brand)">Mot de passe oublié ?</button>
+        </div>
+
+        <!-- Confirmation (inscription) -->
+        <div id="authConfirmRow" class="hidden mb-4">
+          <label class="form-label">Confirmer le mot de passe</label>
+          <div class="relative">
+            <input id="authConfirm" type="password" placeholder="••••••••" class="form-input pr-10"
+              onkeydown="if(event.key==='Enter') Auth.submit()" />
+            <button onclick="togglePwd('authConfirm')" class="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--text-faint)">👁</button>
+          </div>
+        </div>
+
+        <!-- Bouton principal -->
+        <button id="authSubmitBtn" onclick="Auth.submit()" class="btn-primary w-full mb-3">Se connecter</button>
+
+        <!-- Séparateur -->
+        <div class="flex items-center gap-3 my-4">
+          <div class="flex-1 h-px" style="background:var(--border)"></div>
+          <span class="text-xs" style="color:var(--text-faint)">ou</span>
+          <div class="flex-1 h-px" style="background:var(--border)"></div>
+        </div>
+
+        <!-- Google -->
+        <button onclick="Auth.loginGoogle()" class="btn-secondary w-full flex items-center justify-center gap-3 mb-5">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continuer avec Google
+        </button>
+
+        <!-- Toggle login / register -->
+        <p id="linkToRegister" class="text-center text-sm" style="color:var(--text-faint)">
+          Pas encore de compte ?
+          <button onclick="Auth.switchMode('register')" class="font-semibold hover:underline" style="color:var(--brand)">Créer un compte</button>
+        </p>
+        <p id="linkToLogin" class="hidden text-center text-sm" style="color:var(--text-faint)">
+          Déjà un compte ?
+          <button onclick="Auth.switchMode('login')" class="font-semibold hover:underline" style="color:var(--brand)">Se connecter</button>
+        </p>
+      </div>
+
+      <!-- Toggle thème sur l'écran de login -->
+      <div class="text-center mt-4">
+        <button onclick="Theme.toggle()" id="themeToggleAuth" class="text-sm hover:underline" style="color:var(--text-faint)">🌙 Changer le thème</button>
       </div>
     </div>
-
-    <!-- Navigation -->
-    <nav class="flex-1 px-3 py-4 space-y-1">
-      <a href="#dashboard"   class="nav-link" data-page="dashboard">   <span>🏠</span> Dashboard      </a>
-      <a href="#journal"     class="nav-link" data-page="journal">     <span>📒</span> Journal        </a>
-      <a href="#strategies"  class="nav-link" data-page="strategies">  <span>🧠</span> Stratégies     </a>
-      <a href="#calendar"    class="nav-link" data-page="calendar">    <span>🕐</span> Sessions       </a>
-      <a href="#economics"   class="nav-link" data-page="economics">   <span>📰</span> Économie       </a>
-      <a href="#notebook"    class="nav-link" data-page="notebook">    <span>📝</span> Bloc-notes     </a>
-    </nav>
-
-    <!-- Theme toggle + footer -->
-    <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
-      <span class="text-xs text-slate-500">Données locales</span>
-      <button id="themeToggle" onclick="Theme.toggle()" title="Changer le thème"
-        class="text-slate-400 hover:text-white transition text-lg leading-none px-2 py-1 rounded-lg hover:bg-white/10">🌙</button>
-    </div>
-  </aside>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       MAIN
+       APPLICATION PRINCIPALE
   ════════════════════════════════════════════════════════ -->
-  <main class="flex-1 overflow-auto main-bg">
-    <div id="page-dashboard"  class="page hidden"></div>
-    <div id="page-journal"    class="page hidden"></div>
-    <div id="page-strategies" class="page hidden"></div>
-    <div id="page-calendar"   class="page hidden"></div>
-    <div id="page-economics"  class="page hidden"></div>
-    <div id="page-notebook"   class="page hidden"></div>
-  </main>
+  <div id="appLayout" class="hidden flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 sidebar flex flex-col shrink-0">
+      <div class="px-6 py-5 border-b sidebar-border flex items-center justify-between">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+          <span class="text-2xl">📈</span>
+          <span class="sidebar-title">TradingLog</span>
+        </h1>
+      </div>
+
+      <!-- Utilisateur connecté -->
+      <div class="px-4 py-3 border-b sidebar-border flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm shrink-0" id="userAvatar">?</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate" style="color:var(--text-primary)" id="userDisplayName">…</p>
+          <button onclick="Auth.logout()" class="text-xs hover:underline" style="color:var(--text-faint)">Se déconnecter</button>
+        </div>
+      </div>
+
+      <!-- Journal selector -->
+      <div class="px-4 py-4 border-b sidebar-border">
+        <label class="form-label">Journal actif</label>
+        <div class="flex gap-2 mt-1">
+          <select id="journalSelector" class="flex-1 form-input text-sm"></select>
+          <button onclick="App.openModal('journalModal')" title="Nouveau journal"
+            class="text-white px-3 py-2 rounded-lg text-sm font-bold transition" style="background:var(--brand)">+</button>
+          <button onclick="Journals.remove(Journals.activeId())" title="Supprimer ce journal"
+            class="px-2 py-2 rounded-lg text-sm transition border sidebar-border hover:text-red-400" style="color:var(--text-faint)">🗑️</button>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 px-3 py-4 space-y-1">
+        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard     </a>
+        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal       </a>
+        <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies    </a>
+        <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions      </a>
+        <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie      </a>
+        <a href="#notebook"   class="nav-link" data-page="notebook">   <span>📝</span> Bloc-notes    </a>
+      </nav>
+
+      <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
+        <span class="text-xs" style="color:var(--text-faint)">Données cloud ☁️</span>
+        <button id="themeToggle" onclick="Theme.toggle()" title="Changer le thème"
+          class="text-lg leading-none px-2 py-1 rounded-lg hover:bg-white/10 transition" style="color:var(--text-faint)">🌙</button>
+      </div>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="flex-1 overflow-auto main-bg">
+      <div id="page-dashboard"  class="page hidden"></div>
+      <div id="page-journal"    class="page hidden"></div>
+      <div id="page-strategies" class="page hidden"></div>
+      <div id="page-calendar"   class="page hidden"></div>
+      <div id="page-economics"  class="page hidden"></div>
+      <div id="page-notebook"   class="page hidden"></div>
+    </main>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       MODAL — Nouveau Journal
+       MODALS
   ════════════════════════════════════════════════════════ -->
+
+  <!-- Journal -->
   <div id="journalModal" class="modal-backdrop hidden">
     <div class="modal-box w-[420px]">
       <h2 class="text-lg font-semibold modal-title mb-5">Nouveau Journal</h2>
       <div class="space-y-4">
-
         <div>
           <label class="form-label">Nom du journal</label>
           <input id="jName" type="text" placeholder="Ex: Compte Principal" class="form-input" />
         </div>
-
         <div>
           <label class="form-label">Type de compte</label>
           <select id="jType" class="form-input" onchange="JournalModal.onTypeChange()">
@@ -98,33 +202,28 @@
             <option value="demo">🧪 Démo</option>
           </select>
         </div>
-
-        <!-- Capital de départ (commun à tous) -->
         <div>
           <label class="form-label">Capital de départ ($)</label>
           <input id="jCapital" type="number" min="0" placeholder="Ex: 10 000" class="form-input" />
         </div>
-
-        <!-- Champs spécifiques Prop Firm -->
         <div id="propSection" class="hidden space-y-4 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
           <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">Règles Prop Firm</p>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="form-label">Drawdown max total (%)</label>
-              <input id="jDrawdown" type="number" min="0" step="0.1" placeholder="Ex: 10" class="form-input" />
+              <input id="jDrawdown" type="number" min="0" step="0.1" placeholder="10" class="form-input" />
             </div>
             <div>
               <label class="form-label">Perte max / jour (%)</label>
-              <input id="jDailyLoss" type="number" min="0" step="0.1" placeholder="Ex: 5" class="form-input" />
+              <input id="jDailyLoss" type="number" min="0" step="0.1" placeholder="5" class="form-input" />
             </div>
           </div>
           <div>
             <label class="form-label">Objectif de profit (%)</label>
-            <input id="jTarget" type="number" min="0" step="0.1" placeholder="Ex: 8" class="form-input" />
+            <input id="jTarget" type="number" min="0" step="0.1" placeholder="8" class="form-input" />
           </div>
         </div>
       </div>
-
       <div class="flex gap-3 mt-6 justify-end">
         <button onclick="App.closeModal('journalModal')" class="btn-secondary">Annuler</button>
         <button onclick="Journals.create()" class="btn-primary">Créer</button>
@@ -132,22 +231,16 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════
-       MODAL — Nouveau Trade
-  ════════════════════════════════════════════════════════ -->
+  <!-- Trade -->
   <div id="tradeModal" class="modal-backdrop hidden">
     <div class="modal-box w-[640px]">
       <h2 class="text-lg font-semibold modal-title mb-5" id="tradeModalTitle">Nouveau Trade</h2>
       <input type="hidden" id="tradeId" />
-
       <div class="grid grid-cols-2 gap-3">
-        <!-- Date -->
         <div>
           <label class="form-label">Date / Heure</label>
           <input id="tDate" type="datetime-local" class="form-input" />
         </div>
-
-        <!-- Sens -->
         <div>
           <label class="form-label">Sens</label>
           <select id="tSide" class="form-input" onchange="Trades.recalcPnL()">
@@ -155,77 +248,58 @@
             <option value="sell">▼ Vente (Short)</option>
           </select>
         </div>
-
-        <!-- Actif — liste complète -->
         <div class="col-span-2">
           <label class="form-label">Actif</label>
           <div class="flex gap-2">
             <select id="tAsset" class="flex-1 form-input" onchange="Trades.recalcPnL()">
               <option value="">— Sélectionner un instrument —</option>
             </select>
-            <!-- Champ libre pour un actif non listé -->
             <input id="tAssetCustom" type="text" placeholder="Autre…"
-              class="form-input w-32 text-sm" oninput="Trades.onCustomAsset(this)"
-              title="Entrer un actif non listé" />
+              class="form-input w-32 text-sm" oninput="Trades.onCustomAsset(this)" title="Actif non listé" />
           </div>
         </div>
-
-        <!-- Taille -->
         <div>
-          <label class="form-label" id="tSizeLabel">Taille (lots / unités)</label>
-          <input id="tSize" type="number" step="any" min="0" placeholder="0.10" class="form-input"
-            oninput="Trades.recalcPnL()" />
+          <label class="form-label">Taille (lots / unités)</label>
+          <input id="tSize" type="number" step="any" min="0" placeholder="0.10" class="form-input" oninput="Trades.recalcPnL()" />
         </div>
-
-        <!-- Émotion -->
         <div>
           <label class="form-label">Émotions</label>
           <select id="tEmotion" class="form-input">
             <option value="">-- Sélectionner --</option>
             <option value="calm">😌 Calme / Confiant</option>
             <option value="fear">😰 Peur / Hésitation</option>
-            <option value="greed">🤑 Cupidité / Overtrading</option>
+            <option value="greed">🤑 Cupidité</option>
             <option value="revenge">😤 Revenge Trading</option>
             <option value="fomo">😱 FOMO</option>
             <option value="disciplined">💪 Discipliné</option>
             <option value="bored">😑 Ennui</option>
           </select>
         </div>
-
-        <!-- Prix d'entrée -->
         <div>
           <label class="form-label">Prix d'entrée</label>
-          <input id="tEntry" type="number" step="any" placeholder="1.08500" class="form-input"
-            oninput="Trades.recalcPnL()" />
+          <input id="tEntry" type="number" step="any" placeholder="1.08500" class="form-input" oninput="Trades.recalcPnL()" />
         </div>
-
-        <!-- Prix de sortie -->
         <div>
           <label class="form-label">Prix de sortie</label>
-          <input id="tExit" type="number" step="any" placeholder="1.09200" class="form-input"
-            oninput="Trades.recalcPnL()" />
+          <input id="tExit" type="number" step="any" placeholder="1.09200" class="form-input" oninput="Trades.recalcPnL()" />
         </div>
       </div>
 
-      <!-- P&L preview (auto-calculé) -->
-      <div id="pnlPreview" class="hidden mt-4 p-4 rounded-xl bg-[#252840] border border-[#3e4276]"></div>
+      <!-- P&L auto-calculé -->
+      <div id="pnlPreview" class="hidden mt-4 p-4 rounded-xl border" style="background:var(--bg-input);border-color:var(--border)"></div>
 
-      <!-- Notes -->
       <div class="mt-3">
         <label class="form-label">Notes</label>
-        <textarea id="tNotes" rows="2" placeholder="Setup, raison d'entrée, observations..." class="form-input resize-none"></textarea>
+        <textarea id="tNotes" rows="2" placeholder="Setup, raison d'entrée…" class="form-input resize-none"></textarea>
       </div>
-
-      <!-- Image -->
       <div class="mt-3">
-        <label class="form-label">Capture d'écran du graphique</label>
-        <div id="dropzone" class="border-2 border-dashed border-[#2e3256] rounded-lg p-4 text-center cursor-pointer hover:border-brand transition">
-          <p class="text-slate-400 text-sm">Glisser-déposer une image ou <span class="text-brand underline">cliquer</span></p>
+        <label class="form-label">Capture d'écran</label>
+        <div id="dropzone" class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-brand transition" style="border-color:var(--border)">
+          <p class="text-sm" style="color:var(--text-faint)">Glisser-déposer une image ou <span class="text-brand underline">cliquer</span></p>
           <input type="file" id="tImage" accept="image/*" class="hidden" onchange="Trades.handleImage(event)" />
           <img id="imagePreview" class="mt-3 max-h-40 mx-auto rounded hidden" />
         </div>
       </div>
-
       <div class="flex gap-3 mt-6 justify-end">
         <button onclick="App.closeModal('tradeModal')" class="btn-secondary">Annuler</button>
         <button onclick="Trades.save()" class="btn-primary">Enregistrer</button>
@@ -233,21 +307,19 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════
-       MODAL — Stratégie
-  ════════════════════════════════════════════════════════ -->
+  <!-- Stratégie -->
   <div id="strategyModal" class="modal-backdrop hidden">
     <div class="modal-box w-[640px]">
       <h2 class="text-lg font-semibold modal-title mb-5">Fiche Stratégie</h2>
       <input type="hidden" id="stratId" />
       <div class="space-y-3">
         <div>
-          <label class="form-label">Nom de la stratégie</label>
+          <label class="form-label">Nom</label>
           <input id="stratName" type="text" placeholder="Ex: Smart Money Concepts" class="form-input" />
         </div>
         <div>
-          <label class="form-label">Contenu (Markdown supporté)</label>
-          <textarea id="stratContent" rows="10" placeholder="## Description&#10;&#10;Décris ta stratégie..." class="form-input resize-none font-mono text-sm"></textarea>
+          <label class="form-label">Contenu (Markdown)</label>
+          <textarea id="stratContent" rows="10" placeholder="## Description…" class="form-input resize-none font-mono text-sm"></textarea>
         </div>
       </div>
       <div class="flex gap-3 mt-6 justify-end">
@@ -257,9 +329,12 @@
     </div>
   </div>
 
-  <!-- Scripts (ordre important) -->
+  <!-- Scripts -->
+  <script src="js/firebase-config.js"></script>
   <script src="js/store.js"></script>
   <script src="js/assets.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/journals.js"></script>
   <script src="js/trades.js"></script>
   <script src="js/dashboard.js"></script>
@@ -268,17 +343,26 @@
   <script src="js/calendar.js"></script>
   <script src="js/economics.js"></script>
   <script src="js/notebook.js"></script>
-  <script src="js/theme.js"></script>
   <script src="js/app.js"></script>
 
   <script>
-    // Helper modal journal — affiche/cache les champs selon le type
+    // Helper modal journal
     const JournalModal = {
       onTypeChange() {
         const type = document.getElementById('jType').value;
         document.getElementById('propSection').classList.toggle('hidden', type !== 'prop');
       }
     };
+
+    // Toggle visibilité mot de passe
+    function togglePwd(id) {
+      const el = document.getElementById(id);
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    // Démarrage : thème puis écoute auth
+    Theme.init();
+    Auth.listen();
   </script>
 </body>
 </html>
