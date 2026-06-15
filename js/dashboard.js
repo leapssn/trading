@@ -93,10 +93,10 @@ const Dashboard = (() => {
         <!-- Par journal -->
         ${journals.length > 0 ? `
         <div>
-          <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Performance par journal</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider mb-3" style="color:var(--text-faint)">Performance par journal</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${journalCards}</div>
         </div>` : `
-        <div class="text-center py-16 text-slate-500">
+        <div class="text-center py-16" style="color:var(--text-faint)">
           <div class="text-4xl mb-3">📒</div>
           <p>Créez votre premier journal pour commencer !</p>
           <button onclick="App.openModal('journalModal')" class="btn-primary mt-4">Créer un journal</button>
@@ -153,12 +153,14 @@ const Dashboard = (() => {
   }
 
   function chartOptions(unit) {
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#2e3256';
+    const tickColor = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim() || '#64748b';
     return {
       responsive: true,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} ${unit}` } } },
       scales: {
-        x: { grid: { color: '#2e3256' }, ticks: { color: '#64748b', maxTicksLimit: 8 } },
-        y: { grid: { color: '#2e3256' }, ticks: { color: '#64748b' } },
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 8 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } },
       },
     };
   }

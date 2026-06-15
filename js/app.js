@@ -5,18 +5,21 @@ const App = (() => {
   let _currentPage = 'dashboard';
 
   const PAGES = {
-    dashboard:  { render: c => Dashboard.render(c),       label: 'Dashboard' },
-    journal:    { render: c => JournalPage.render(c),     label: 'Journal' },
-    strategies: { render: c => Strategies.render(c),      label: 'Stratégies' },
-    calendar:   { render: c => MarketCalendar.render(c),  label: 'Sessions' },
-    economics:  { render: c => Economics.render(c),       label: 'Économie' },
-    notebook:   { render: c => Notebook.render(c),        label: 'Bloc-notes' },
+    dashboard:  { render: c => Dashboard.render(c)      },
+    journal:    { render: c => JournalPage.render(c)    },
+    strategies: { render: c => Strategies.render(c)     },
+    calendar:   { render: c => MarketCalendar.render(c) },
+    economics:  { render: c => Economics.render(c)      },
+    notebook:   { render: c => Notebook.render(c)       },
   };
 
   function init() {
-    // Créer un journal par défaut si vide
+    // Thème
+    Theme.init();
+
+    // Journal par défaut
     if (Store.journals.all().length === 0) {
-      const j = { id: Store.uid(), name: 'Mon Journal', type: 'real', createdAt: new Date().toISOString() };
+      const j = { id: Store.uid(), name: 'Mon Journal', type: 'real', capital: 0, createdAt: new Date().toISOString() };
       Store.journals.add(j);
       Store.activeJournal.set(j.id);
     }
@@ -27,12 +30,11 @@ const App = (() => {
     refreshJournalSelector();
     setupNav();
     setupJournalModal();
+    populateAssetSelect();
 
-    // Route via hash ou défaut
     const hash = location.hash.replace('#', '') || 'dashboard';
     navigate(PAGES[hash] ? hash : 'dashboard');
 
-    // Actualiser les sessions toutes les minutes
     setInterval(() => { if (_currentPage === 'calendar') render('calendar'); }, 60000);
   }
 
@@ -46,17 +48,17 @@ const App = (() => {
   }
 
   function setupJournalModal() {
-    const typeSelect = document.getElementById('jType');
-    const propSection = document.getElementById('propSection');
-    typeSelect?.addEventListener('change', () => {
-      propSection.classList.toggle('hidden', typeSelect.value !== 'prop');
-    });
-
-    // Journal selector change
     document.getElementById('journalSelector')?.addEventListener('change', e => {
       Store.activeJournal.set(e.target.value);
       render(_currentPage);
     });
+  }
+
+  // Remplit le <select> des actifs dans la modal Trade
+  function populateAssetSelect() {
+    const sel = document.getElementById('tAsset');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Sélectionner un instrument —</option>' + Assets.buildSelectHTML();
   }
 
   function refreshJournalSelector() {
@@ -73,12 +75,9 @@ const App = (() => {
     if (!PAGES[page]) return;
     _currentPage = page;
     location.hash = page;
-
-    // Active nav
     document.querySelectorAll('.nav-link').forEach(l => {
       l.classList.toggle('active', l.dataset.page === page);
     });
-
     render(page);
   }
 
@@ -92,39 +91,21 @@ const App = (() => {
     PAGES[page].render(container);
   }
 
-  function openModal(id) {
-    document.getElementById(id)?.classList.remove('hidden');
-  }
+  function openModal(id)  { document.getElementById(id)?.classList.remove('hidden'); }
+  function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
 
-  function closeModal(id) {
-    document.getElementById(id)?.classList.add('hidden');
-  }
-
-  // Close modal on backdrop click
   document.addEventListener('click', e => {
-    if (e.target.classList.contains('modal-backdrop')) {
-      e.target.classList.add('hidden');
-    }
+    if (e.target.classList.contains('modal-backdrop')) e.target.classList.add('hidden');
   });
-
-  // Keyboard shortcut: Escape = close modals
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Escape')
       document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(m => m.classList.add('hidden'));
-    }
   });
 
-  // Public API
   return {
-    init,
-    render,
-    navigate,
-    openModal,
-    closeModal,
-    refreshJournalSelector,
+    init, render, navigate, openModal, closeModal, refreshJournalSelector,
     get currentPage() { return _currentPage; },
   };
 })();
 
-// Boot
 document.addEventListener('DOMContentLoaded', () => App.init());

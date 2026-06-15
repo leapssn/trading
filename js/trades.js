@@ -1,19 +1,22 @@
 // ============================================================
-// trades.js — CRUD des trades
+// trades.js — CRUD des trades + auto-calcul P&L
 // ============================================================
 const Trades = (() => {
 
-  let _imageData = null; // base64 de l'image courante
+  let _imageData = null;
 
   function openNew() {
     _imageData = null;
     document.getElementById('tradeId').value = '';
     document.getElementById('tradeModalTitle').textContent = 'Nouveau Trade';
     document.getElementById('tDate').value = new Date().toISOString().slice(0, 16);
-    ['tAsset','tSize','tEntry','tExit','tPnl','tNotes'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('tSide').value = 'buy';
-    document.getElementById('tEmotion').value = '';
+    ['tSize','tEntry','tExit','tNotes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('tAsset').value       = '';
+    document.getElementById('tAssetCustom').value = '';
+    document.getElementById('tSide').value        = 'buy';
+    document.getElementById('tEmotion').value     = '';
     document.getElementById('imagePreview').classList.add('hidden');
+    resetPnlDisplay();
     App.openModal('tradeModal');
   }
 
@@ -21,44 +24,108 @@ const Trades = (() => {
     const t = Store.trades.getById(id);
     if (!t) return;
     _imageData = t.image || null;
-    document.getElementById('tradeId').value = t.id;
+    document.getElementById('tradeId').value   = t.id;
     document.getElementById('tradeModalTitle').textContent = 'Modifier le Trade';
-    document.getElementById('tDate').value   = t.date;
-    document.getElementById('tAsset').value  = t.asset;
-    document.getElementById('tSide').value   = t.side;
-    document.getElementById('tSize').value   = t.size;
-    document.getElementById('tEntry').value  = t.entry;
-    document.getElementById('tExit').value   = t.exit;
-    document.getElementById('tPnl').value    = t.pnl;
-    document.getElementById('tEmotion').value= t.emotion;
-    document.getElementById('tNotes').value  = t.notes;
+    document.getElementById('tDate').value     = t.date;
+    // Rempli le select si l'asset est dans le catalogue, sinon le champ libre
+    const inCatalog = Assets.getBySymbol(t.asset);
+    document.getElementById('tAsset').value       = inCatalog ? t.asset : '';
+    document.getElementById('tAssetCustom').value = inCatalog ? '' : t.asset;
+    document.getElementById('tSide').value     = t.side;
+    document.getElementById('tSize').value     = t.size;
+    document.getElementById('tEntry').value    = t.entry;
+    document.getElementById('tExit').value     = t.exit;
+    document.getElementById('tEmotion').value  = t.emotion;
+    document.getElementById('tNotes').value    = t.notes;
     const prev = document.getElementById('imagePreview');
     if (t.image) { prev.src = t.image; prev.classList.remove('hidden'); }
     else { prev.classList.add('hidden'); }
+    // Afficher les P&L sauvegardés
+    updatePnlDisplay(t.pnlUSD ?? t.pnl, t.pnlPct ?? null, t.pips ?? null, t.quoteSymbol);
     App.openModal('tradeModal');
   }
 
+  // Appelé à chaque modification de prix / taille / sens / actif
+  function recalcPnL() {
+    const symbol = activeSymbol();
+    const side   = document.getElementById('tSide')?.value;
+    const entry  = parseFloat(document.getElementById('tEntry')?.value);
+    const exit   = parseFloat(document.getElementById('tExit')?.value);
+    const size   = parseFloat(document.getElementById('tSize')?.value);
+
+    if (!entry || !exit || !size) { resetPnlDisplay(); return; }
+
+    const result = Assets.calcPnL(symbol, side, entry, exit, size);
+    updatePnlDisplay(result.pnlUSD, result.pnlPct, result.pips, result.quoteSymbol);
+  }
+
+  function updatePnlDisplay(pnlUSD, pnlPct, pips, quoteSymbol) {
+    const box = document.getElementById('pnlPreview');
+    if (!box) return;
+    if (pnlUSD === null || pnlUSD === undefined) { resetPnlDisplay(); return; }
+
+    const sign  = pnlUSD >= 0 ? '+' : '';
+    const color = pnlUSD >= 0 ? 'text-green-400' : 'text-red-400';
+    const qs    = quoteSymbol && quoteSymbol !== 'USD' ? ` ${quoteSymbol}` : '$';
+
+    box.innerHTML = `
+      <div class="flex items-center gap-6 flex-wrap">
+        <div>
+          <div class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">P&L estimé</div>
+          <div class="text-2xl font-bold ${color}">${sign}${qs === '$' ? '$' : ''}${Math.abs(pnlUSD).toFixed(2)}${qs !== '$' ? ' ' + qs.trim() : ''}</div>
+        </div>
+        ${pnlPct !== null ? `
+        <div>
+          <div class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Variation %</div>
+          <div class="text-xl font-bold ${color}">${sign}${pnlPct.toFixed(3)}%</div>
+        </div>` : ''}
+        ${pips !== null && pips !== 0 ? `
+        <div>
+          <div class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Pips / Points</div>
+          <div class="text-xl font-bold ${color}">${sign}${pips}</div>
+        </div>` : ''}
+      </div>`;
+    box.classList.remove('hidden');
+  }
+
+  function resetPnlDisplay() {
+    const box = document.getElementById('pnlPreview');
+    if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
+  }
+
   function save() {
-    const id      = document.getElementById('tradeId').value;
+    const id        = document.getElementById('tradeId').value;
     const journalId = Journals.activeId();
     if (!journalId) { alert('Aucun journal sélectionné.'); return; }
 
+    const symbol = activeSymbol();
+    const side   = document.getElementById('tSide').value;
+    const entry  = parseFloat(document.getElementById('tEntry').value) || 0;
+    const exit   = parseFloat(document.getElementById('tExit').value)  || 0;
+    const size   = parseFloat(document.getElementById('tSize').value)  || 0;
+
+    const calc = Assets.calcPnL(symbol, side, entry, exit, size);
+
     const trade = {
-      id:        id || Store.uid(),
+      id:          id || Store.uid(),
       journalId,
-      date:      document.getElementById('tDate').value,
-      asset:     document.getElementById('tAsset').value.trim(),
-      side:      document.getElementById('tSide').value,
-      size:      parseFloat(document.getElementById('tSize').value) || 0,
-      entry:     parseFloat(document.getElementById('tEntry').value) || 0,
-      exit:      parseFloat(document.getElementById('tExit').value) || 0,
-      pnl:       parseFloat(document.getElementById('tPnl').value) || 0,
-      emotion:   document.getElementById('tEmotion').value,
-      notes:     document.getElementById('tNotes').value.trim(),
-      image:     _imageData,
+      date:        document.getElementById('tDate').value,
+      asset:       symbol,
+      side,
+      size,
+      entry,
+      exit,
+      pnl:         calc.pnlUSD,        // valeur principale utilisée pour les stats
+      pnlUSD:      calc.pnlUSD,
+      pnlPct:      calc.pnlPct,
+      pips:        calc.pips,
+      quoteSymbol: calc.quoteSymbol,
+      emotion:     document.getElementById('tEmotion').value,
+      notes:       document.getElementById('tNotes').value.trim(),
+      image:       _imageData,
     };
 
-    if (!trade.asset) { alert('Veuillez renseigner l\'actif.'); return; }
+    if (!trade.asset) { alert('Veuillez sélectionner un actif.'); return; }
 
     if (id) Store.trades.update(trade);
     else    Store.trades.add(trade);
@@ -78,6 +145,10 @@ const Trades = (() => {
   function handleImage(event) {
     const file = event.target.files[0];
     if (!file) return;
+    readFile(file);
+  }
+
+  function readFile(file) {
     const reader = new FileReader();
     reader.onload = e => {
       _imageData = e.target.result;
@@ -92,34 +163,41 @@ const Trades = (() => {
     const dz = document.getElementById('dropzone');
     if (!dz) return;
     dz.addEventListener('click', () => document.getElementById('tImage').click());
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('border-brand'); });
-    dz.addEventListener('dragleave', ()  => dz.classList.remove('border-brand'));
+    dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('border-brand'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('border-brand'));
     dz.addEventListener('drop', e => {
       e.preventDefault();
       dz.classList.remove('border-brand');
       const file = e.dataTransfer.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        _imageData = ev.target.result;
-        const prev = document.getElementById('imagePreview');
-        prev.src = _imageData;
-        prev.classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
+      if (file) readFile(file);
     });
   }
 
-  // Calcul stats pour un tableau de trades
   function stats(tradeList) {
-    const total  = tradeList.reduce((s, t) => s + t.pnl, 0);
-    const wins   = tradeList.filter(t => t.pnl > 0);
-    const losses = tradeList.filter(t => t.pnl < 0);
+    const total   = tradeList.reduce((s, t) => s + (t.pnl || 0), 0);
+    const wins    = tradeList.filter(t => t.pnl > 0);
+    const losses  = tradeList.filter(t => t.pnl < 0);
     const winRate = tradeList.length ? (wins.length / tradeList.length * 100) : 0;
     const avgWin  = wins.length   ? wins.reduce((s,t) => s + t.pnl, 0) / wins.length   : 0;
     const avgLoss = losses.length ? losses.reduce((s,t) => s + t.pnl, 0) / losses.length : 0;
     return { total, wins: wins.length, losses: losses.length, count: tradeList.length, winRate, avgWin, avgLoss };
   }
 
-  return { openNew, openEdit, save, remove, handleImage, setupDropzone, stats };
+  // Actif libre (non listé) — désélectionne le select et utilise le champ texte
+  function onCustomAsset(input) {
+    if (input.value.trim()) {
+      const sel = document.getElementById('tAsset');
+      if (sel) sel.value = '';
+    }
+    recalcPnL();
+  }
+
+  // Retourne le symbole actif (liste ou champ libre)
+  function activeSymbol() {
+    const sel    = document.getElementById('tAsset')?.value;
+    const custom = document.getElementById('tAssetCustom')?.value.trim();
+    return sel || custom || '';
+  }
+
+  return { openNew, openEdit, save, remove, handleImage, setupDropzone, stats, recalcPnL, onCustomAsset };
 })();
