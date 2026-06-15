@@ -41,7 +41,7 @@ const App = (() => {
   }
 
   function setupNav() {
-    document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(link => {
+    document.querySelectorAll('.nav-link').forEach(link => {
       const newLink = link.cloneNode(true);
       link.parentNode.replaceChild(newLink, link);
       newLink.addEventListener('click', e => { e.preventDefault(); navigate(newLink.dataset.page); });
@@ -77,11 +77,26 @@ const App = (() => {
   function navigate(page) {
     if (!PAGES[page]) return;
     _currentPage = page;
-    location.hash = page;
-    document.querySelectorAll('.nav-link, .mobile-nav-item').forEach(l => {
-      l.classList.toggle('active', l.dataset.page === page);
-    });
+    history.replaceState(null, '', '#' + page);
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+    document.querySelectorAll('.drawer-nav-btn').forEach(l => l.classList.toggle('active', l.dataset.page === page));
     render(page);
+  }
+
+  function openDrawer() {
+    const d = document.getElementById('mobileDrawer');
+    if (d) d.classList.remove('hidden');
+    // sync avatar/name in drawer
+    const av = document.getElementById('userAvatar');
+    const nm = document.getElementById('userDisplayName');
+    if (av) document.getElementById('userAvatarDrawer').textContent = av.textContent;
+    if (nm) document.getElementById('userDisplayNameDrawer').textContent = nm.textContent;
+    // highlight active page
+    document.querySelectorAll('.drawer-nav-btn').forEach(l => l.classList.toggle('active', l.dataset.page === _currentPage));
+  }
+
+  function closeDrawer() {
+    document.getElementById('mobileDrawer')?.classList.add('hidden');
   }
 
   function render(page) {
@@ -106,6 +121,7 @@ const App = (() => {
 
   return {
     init, render, navigate, openModal, closeModal, refreshJournalSelector,
+    openDrawer, closeDrawer,
     get currentPage() { return _currentPage; },
   };
 })();

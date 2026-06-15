@@ -171,20 +171,27 @@
     <div class="flex-1 flex flex-col min-w-0">
 
       <!-- Header mobile (masqué sur desktop) -->
-      <header class="flex md:hidden items-center justify-between px-4 py-3 border-b shrink-0 mobile-header" style="border-color:var(--border);background:var(--bg-sidebar)">
-        <h1 class="font-bold flex items-center gap-2" style="color:var(--text-primary)">
+      <header class="flex md:hidden items-center justify-between px-3 py-2 border-b shrink-0 mobile-header" style="border-color:var(--border);background:var(--bg-sidebar)">
+        <!-- Hamburger -->
+        <button onclick="App.openDrawer()" class="p-2 rounded-lg" style="color:var(--text-primary)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="3" y1="6"  x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <h1 class="font-bold text-sm flex items-center gap-1" style="color:var(--text-primary)">
           <span>📈</span> TradingLog
         </h1>
-        <div class="flex items-center gap-2">
-          <select id="journalSelectorMobile" class="form-input text-xs py-1.5 max-w-[130px]"
+        <div class="flex items-center gap-1.5">
+          <select id="journalSelectorMobile" class="form-input text-xs py-1 max-w-[110px]"
             onchange="Store.activeJournal.set(this.value);App.refreshJournalSelector();App.render(App.currentPage)"></select>
-          <button onclick="App.openModal('journalModal')" class="text-white w-7 h-7 rounded-lg text-sm font-bold flex items-center justify-center" style="background:var(--brand)">+</button>
-          <button onclick="Theme.toggle()" id="themeToggleMobile" class="text-lg px-1" style="color:var(--text-faint)">🌙</button>
+          <button onclick="Theme.toggle()" id="themeToggleMobile" class="text-base px-1" style="color:var(--text-faint)">🌙</button>
         </div>
       </header>
 
       <!-- Contenu principal -->
-      <main class="flex-1 overflow-auto main-bg flex flex-col mobile-content">
+      <main class="flex-1 overflow-auto main-bg flex flex-col">
         <div id="page-dashboard"  class="page hidden"></div>
         <div id="page-journal"    class="page hidden"></div>
         <div id="page-strategies" class="page hidden"></div>
@@ -192,14 +199,40 @@
         <div id="page-economics"  class="page hidden"></div>
         <div id="page-notebook"   class="page hidden"></div>
       </main>
+    </div>
+  </div>
 
-      <!-- ── NAVIGATION MOBILE (bas d'écran) ── -->
-      <nav class="flex md:hidden shrink-0 border-t mobile-bottom-nav" style="border-color:var(--border);background:var(--bg-sidebar)">
-        <a href="#dashboard"  class="mobile-nav-item" data-page="dashboard">  <span class="text-xl">🏠</span><span>Home</span>     </a>
-        <a href="#journal"    class="mobile-nav-item" data-page="journal">    <span class="text-xl">📒</span><span>Journal</span>   </a>
-        <a href="#strategies" class="mobile-nav-item" data-page="strategies"> <span class="text-xl">🧠</span><span>Stratégies</span></a>
-        <a href="#economics"  class="mobile-nav-item" data-page="economics">  <span class="text-xl">📰</span><span>Économie</span>  </a>
-        <a href="#notebook"   class="mobile-nav-item" data-page="notebook">   <span class="text-xl">📝</span><span>Notes</span>     </a>
+  <!-- ── TIROIR MOBILE (overlay depuis la gauche) ── -->
+  <div id="mobileDrawer" class="mobile-drawer-overlay hidden" onclick="if(event.target===this)App.closeDrawer()">
+    <div class="mobile-drawer" style="background:var(--bg-sidebar)">
+      <!-- En-tête tiroir -->
+      <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color:var(--border)">
+        <span class="font-bold text-sm" style="color:var(--text-primary)">📈 TradingLog</span>
+        <button onclick="App.closeDrawer()" class="text-xl leading-none" style="color:var(--text-faint)">✕</button>
+      </div>
+      <!-- User -->
+      <div class="px-4 py-3 border-b flex items-center gap-3" style="border-color:var(--border)">
+        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-xs shrink-0" id="userAvatarDrawer">?</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-semibold truncate" style="color:var(--text-primary)" id="userDisplayNameDrawer">…</p>
+          <button onclick="Auth.logout()" class="text-xs hover:underline" style="color:var(--text-faint)">Se déconnecter</button>
+        </div>
+      </div>
+      <!-- Nouveau journal -->
+      <div class="px-4 py-3 border-b" style="border-color:var(--border)">
+        <button onclick="App.openModal('journalModal');App.closeDrawer()"
+          class="w-full text-white text-xs py-2 rounded-lg font-semibold" style="background:var(--brand)">+ Nouveau journal</button>
+        <button onclick="Journals.remove(Journals.activeId());App.closeDrawer()"
+          class="w-full mt-2 text-xs py-2 rounded-lg border font-semibold hover:text-red-400 transition" style="color:var(--text-faint);border-color:var(--border)">🗑️ Supprimer ce journal</button>
+      </div>
+      <!-- Nav links -->
+      <nav class="px-3 py-3 space-y-1 flex-1">
+        <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span>🏠</span> Dashboard    </button>
+        <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span>📒</span> Journal      </button>
+        <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span>🧠</span> Stratégies   </button>
+        <button onclick="App.navigate('calendar');App.closeDrawer()"    class="drawer-nav-btn" data-page="calendar">   <span>🕐</span> Sessions     </button>
+        <button onclick="App.navigate('economics');App.closeDrawer()"   class="drawer-nav-btn" data-page="economics">  <span>📰</span> Économie     </button>
+        <button onclick="App.navigate('notebook');App.closeDrawer()"    class="drawer-nav-btn" data-page="notebook">   <span>📝</span> Bloc-notes   </button>
       </nav>
     </div>
   </div>

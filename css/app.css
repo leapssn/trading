@@ -310,31 +310,8 @@
 .light .data-table tr:hover td { background: #f8fafc; }
 
 /* ═══════════════════════════════════════════════════════════
-   MOBILE — Navigation basse + adaptations
+   MOBILE — Tiroir latéral + adaptations
    ═══════════════════════════════════════════════════════════ */
-
-/* Nav basse mobile */
-.mobile-bottom-nav {
-  display: flex;
-  width: 100%;
-  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
-}
-.mobile-nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 8px 4px;
-  font-size: 0.65rem;
-  color: var(--text-faint);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.mobile-nav-item span:last-child { font-size: 0.6rem; }
-.mobile-nav-item.active { color: var(--brand); }
-.mobile-nav-item:hover  { color: var(--text-primary); }
 
 /* Header mobile */
 .mobile-header {
@@ -343,25 +320,77 @@
   z-index: 30;
 }
 
+/* Overlay tiroir */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
+}
+.mobile-drawer-overlay.hidden { display: none; }
+
+/* Tiroir lui-même */
+.mobile-drawer {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 75vw;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  transform: translateX(0);
+  animation: drawerIn 0.22s ease;
+}
+@keyframes drawerIn {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0);     }
+}
+
+/* Boutons nav dans le tiroir */
+.drawer-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.drawer-nav-btn:hover  { background: var(--bg-hover); color: var(--text-primary); }
+.drawer-nav-btn.active { background: var(--brand);    color: #fff; }
+
 /* Page: padding adaptatif */
 @media (max-width: 767px) {
   .page { min-height: unset; }
-  .content-area { padding: 16px; }
-  .page-header  { padding: 14px 16px; }
+  .content-area { padding: 12px; }
+  .page-header  { padding: 10px 12px; gap: 8px; }
+  .page-title   { font-size: 1rem; }
 
-  /* Modals plein écran sur mobile */
+  /* Polices globales réduites */
+  body { font-size: 13px; }
+  .stat-card    { padding: 12px 14px; }
+  .form-label   { font-size: 0.68rem; }
+  .form-input   { font-size: 0.82rem; padding: 7px 10px; }
+  .btn-primary, .btn-secondary { font-size: 0.8rem; padding: 7px 14px; }
+  .badge        { font-size: 0.68rem; padding: 1px 7px; }
+
+  /* Modals depuis le bas */
   .modal-backdrop { align-items: flex-end; }
   .modal-box {
     border-radius: 20px 20px 0 0;
     max-height: 92vh;
-    padding: 20px 18px;
+    padding: 18px 14px;
     margin: 0;
   }
+  .modal-title { font-size: 1rem; }
 
   /* Tables scrollables */
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .data-table th, .data-table td { padding: 9px 10px; font-size: 0.8rem; white-space: nowrap; }
-
-  /* Grilles → 1 colonne */
-  .mobile-1col { grid-template-columns: 1fr !important; }
+  .data-table th, .data-table td { padding: 7px 8px; font-size: 0.75rem; white-space: nowrap; }
 }
