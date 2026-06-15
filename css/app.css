@@ -369,28 +369,53 @@
 /* Page: padding adaptatif */
 @media (max-width: 767px) {
   .page { min-height: unset; }
-  .content-area { padding: 12px; }
-  .page-header  { padding: 10px 12px; gap: 8px; }
-  .page-title   { font-size: 1rem; }
+  .content-area { padding: 10px; }
+  .page-header  { padding: 9px 10px; gap: 6px; flex-wrap: wrap; }
+  .page-title   { font-size: clamp(0.85rem, 4vw, 1.1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55vw; }
 
-  /* Polices globales réduites */
-  body { font-size: 13px; }
-  .stat-card    { padding: 12px 14px; }
-  .form-label   { font-size: 0.68rem; }
-  .form-input   { font-size: 0.82rem; padding: 7px 10px; }
-  .btn-primary, .btn-secondary { font-size: 0.8rem; padding: 7px 14px; }
-  .badge        { font-size: 0.68rem; padding: 1px 7px; }
+  /* Base fluide : toute la page hérite */
+  body, .page, .content-area { font-size: clamp(11px, 3.2vw, 13px); }
+
+  /* Cartes stat */
+  .stat-card { padding: 10px 11px; }
+
+  /* KPI grands chiffres → clamp fluide */
+  .stat-card .text-2xl { font-size: clamp(1rem, 5vw, 1.4rem) !important; }
+  .stat-card .text-3xl { font-size: clamp(1.2rem, 5.5vw, 1.8rem) !important; }
+  .stat-card .text-4xl { font-size: clamp(1.4rem, 6vw, 2rem) !important; }
+
+  /* Labels, inputs, boutons */
+  .form-label  { font-size: clamp(0.6rem, 2.8vw, 0.72rem); }
+  .form-input  { font-size: clamp(0.75rem, 3.2vw, 0.85rem); padding: 6px 9px; }
+  .btn-primary, .btn-secondary { font-size: clamp(0.72rem, 3vw, 0.85rem); padding: 7px 12px; }
+  .badge { font-size: clamp(0.6rem, 2.5vw, 0.72rem); padding: 1px 6px; }
+
+  /* Titres dans les cartes */
+  h3.text-sm { font-size: clamp(0.7rem, 3vw, 0.85rem) !important; }
+
+  /* Évite les débordements partout */
+  * { word-break: break-word; }
+  .truncate, [class*="truncate"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Modals depuis le bas */
   .modal-backdrop { align-items: flex-end; }
   .modal-box {
     border-radius: 20px 20px 0 0;
     max-height: 92vh;
-    padding: 18px 14px;
+    padding: 16px 12px;
     margin: 0;
   }
-  .modal-title { font-size: 1rem; }
+  .modal-title { font-size: clamp(0.9rem, 4vw, 1.1rem); }
 
   /* Tables scrollables */
-  .data-table th, .data-table td { padding: 7px 8px; font-size: 0.75rem; white-space: nowrap; }
+  .data-table { font-size: clamp(0.68rem, 2.8vw, 0.78rem); }
+  .data-table th, .data-table td { padding: 6px 7px; white-space: nowrap; }
+
+  /* Grilles KPI : 2 colonnes fixes sur mobile */
+  .grid.grid-cols-2.md\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Bloc-notes : éditeur plus lisible */
+  #editor { font-size: clamp(0.85rem, 3.5vw, 1rem) !important; }
+  #pageTitle { font-size: clamp(1.4rem, 7vw, 2rem) !important; }
+  .max-w-3xl { padding-left: 12px !important; padding-right: 12px !important; }
 }
