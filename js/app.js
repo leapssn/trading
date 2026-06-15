@@ -10,7 +10,7 @@ const App = (() => {
     strategies: { render: c => Strategies.render(c)     },
     calendar:   { render: c => MarketCalendar.render(c) },
     economics:  { render: c => Economics.render(c)      },
-    notebook:   { render: c => Notebook.render(c)       },
+    // notebook désactivé temporairement
   };
 
   function init() {
@@ -68,7 +68,7 @@ const App = (() => {
     const opts = journals.map(j =>
       `<option value="${j.id}" ${j.id === active ? 'selected' : ''}>${j.name}</option>`
     ).join('');
-    ['journalSelector', 'journalSelectorMobile'].forEach(id => {
+    ['journalSelector', 'journalSelectorMobile', 'journalSelectorDrawer'].forEach(id => {
       const sel = document.getElementById(id);
       if (sel) sel.innerHTML = opts;
     });
@@ -86,12 +86,11 @@ const App = (() => {
   function openDrawer() {
     const d = document.getElementById('mobileDrawer');
     if (d) d.classList.remove('hidden');
-    // sync avatar/name in drawer
     const av = document.getElementById('userAvatar');
     const nm = document.getElementById('userDisplayName');
     if (av) document.getElementById('userAvatarDrawer').textContent = av.textContent;
     if (nm) document.getElementById('userDisplayNameDrawer').textContent = nm.textContent;
-    // highlight active page
+    refreshJournalSelector();
     document.querySelectorAll('.drawer-nav-btn').forEach(l => l.classList.toggle('active', l.dataset.page === _currentPage));
   }
 

@@ -157,7 +157,7 @@
         <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies   </a>
         <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions     </a>
         <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie     </a>
-        <a href="#notebook"   class="nav-link" data-page="notebook">   <span>📝</span> Bloc-notes   </a>
+        <!-- bloc-notes désactivé temporairement -->
       </nav>
 
       <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
@@ -197,7 +197,7 @@
         <div id="page-strategies" class="page hidden"></div>
         <div id="page-calendar"   class="page hidden"></div>
         <div id="page-economics"  class="page hidden"></div>
-        <div id="page-notebook"   class="page hidden"></div>
+        <!-- bloc-notes désactivé temporairement -->
       </main>
     </div>
   </div>
@@ -218,12 +218,17 @@
           <button onclick="Auth.logout()" class="text-xs hover:underline" style="color:var(--text-faint)">Se déconnecter</button>
         </div>
       </div>
-      <!-- Nouveau journal -->
+      <!-- Sélecteur de journal -->
       <div class="px-4 py-3 border-b" style="border-color:var(--border)">
-        <button onclick="App.openModal('journalModal');App.closeDrawer()"
-          class="w-full text-white text-xs py-2 rounded-lg font-semibold" style="background:var(--brand)">+ Nouveau journal</button>
-        <button onclick="Journals.remove(Journals.activeId());App.closeDrawer()"
-          class="w-full mt-2 text-xs py-2 rounded-lg border font-semibold hover:text-red-400 transition" style="color:var(--text-faint);border-color:var(--border)">🗑️ Supprimer ce journal</button>
+        <label class="form-label mb-1">Journal actif</label>
+        <select id="journalSelectorDrawer" class="form-input text-xs w-full"
+          onchange="Store.activeJournal.set(this.value);App.refreshJournalSelector();App.render(App.currentPage)"></select>
+        <div class="flex gap-2 mt-2">
+          <button onclick="App.openModal('journalModal');App.closeDrawer()"
+            class="flex-1 text-white text-xs py-1.5 rounded-lg font-semibold" style="background:var(--brand)">+ Nouveau</button>
+          <button onclick="Journals.remove(Journals.activeId());App.closeDrawer()"
+            class="flex-1 text-xs py-1.5 rounded-lg border font-semibold hover:text-red-400 transition" style="color:var(--text-faint);border-color:var(--border)">🗑️ Supprimer</button>
+        </div>
       </div>
       <!-- Nav links -->
       <nav class="px-3 py-3 space-y-1 flex-1">
@@ -232,7 +237,6 @@
         <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span>🧠</span> Stratégies   </button>
         <button onclick="App.navigate('calendar');App.closeDrawer()"    class="drawer-nav-btn" data-page="calendar">   <span>🕐</span> Sessions     </button>
         <button onclick="App.navigate('economics');App.closeDrawer()"   class="drawer-nav-btn" data-page="economics">  <span>📰</span> Économie     </button>
-        <button onclick="App.navigate('notebook');App.closeDrawer()"    class="drawer-nav-btn" data-page="notebook">   <span>📝</span> Bloc-notes   </button>
       </nav>
     </div>
   </div>
