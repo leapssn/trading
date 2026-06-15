@@ -6,11 +6,17 @@ on:
     - cron: '0 6 * * 1-5' # lun-ven 06h00 UTC (mise à jour matinale)
   workflow_dispatch:        # déclenchement manuel possible
 
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   fetch-calendar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Fetch ForexFactory calendar
         run: |
