@@ -416,9 +416,6 @@
   .grid.grid-cols-2.md\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* ── Economics : layout compact ── */
-  /* Filtres en colonne */
-  #tab-eco-content .flex.flex-wrap { flex-direction: column; gap: 8px; }
-  #tab-eco-content .flex.flex-wrap .ml-auto { margin-left: 0; }
 
   /* Ligne d'événement : empiler les valeurs sous le titre */
   #ecoList .stat-card > .flex.items-center.gap-4 { flex-wrap: wrap; gap: 8px; }

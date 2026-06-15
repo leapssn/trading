@@ -13,7 +13,12 @@ const Economics = (() => {
   let _filterImpact   = null;
   let _cachedEvents   = null;
   let _openDetail     = null;
-  let _selectedDate   = new Date().toISOString().slice(0, 10);
+  let _selectedDate   = localToday();
+
+  function localToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
 
   // ── Dictionnaire des indicateurs ──────────────────────────
   const INDICATORS = {
@@ -376,28 +381,38 @@ const Economics = (() => {
   }
 
   function buildDaySelector(rawData) {
-    const sel = document.getElementById('daySelector');
-    if (!sel) return;
-    const today = new Date().toISOString().slice(0, 10);
-    // Dates uniques présentes dans les données
-    const dates = [...new Set(rawData.map(e => (e.date||'').slice(0,10)).filter(Boolean))].sort();
-    const DAY_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-    sel.innerHTML = dates.map(d => {
-      const label    = new Date(d + 'T12:00:00');
-      const dayName  = DAY_FR[label.getDay()];
-      const dayNum   = label.getDate();
-      const isToday  = d === today;
-      const isActive = d === _selectedDate;
-      return `<button onclick="Economics.setDate('${d}')"
-        class="shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border text-xs font-semibold transition"
-        style="${isActive
-          ? 'background:var(--brand);color:#fff;border-color:var(--brand)'
-          : 'background:var(--bg-card);color:var(--text-muted);border-color:var(--border)'}">
-        <span style="font-size:0.65rem;opacity:.8">${dayName}</span>
-        <span class="text-sm font-bold">${dayNum}</span>
-        ${isToday ? '<span style="font-size:0.55rem;opacity:.7">auj.</span>' : ''}
-      </button>`;
-    }).join('');
+    try {
+      const sel = document.getElementById('daySelector');
+      if (!sel) return;
+      const today = localToday();
+      const dates = [...new Set(rawData.map(e => (e.date||'').slice(0,10)).filter(d => d.length === 10))].sort();
+      if (!dates.length) { sel.innerHTML = ''; return; }
+
+      // Si la date sélectionnée n'est pas dans les données, prendre la plus proche
+      if (!dates.includes(_selectedDate)) {
+        _selectedDate = dates.reduce((prev, cur) =>
+          Math.abs(new Date(cur) - new Date(today)) < Math.abs(new Date(prev) - new Date(today)) ? cur : prev
+        );
+      }
+
+      const DAY_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+      sel.innerHTML = dates.map(d => {
+        const dt      = new Date(d + 'T12:00:00');
+        const dayName = DAY_FR[dt.getDay()];
+        const dayNum  = dt.getDate();
+        const isToday = d === today;
+        const isAct   = d === _selectedDate;
+        return `<button onclick="Economics.setDate('${d}')"
+          class="shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border text-xs font-semibold transition"
+          style="${isAct
+            ? 'background:var(--brand);color:#fff;border-color:var(--brand)'
+            : 'background:var(--bg-card);color:var(--text-muted);border-color:var(--border)'}">
+          <span style="font-size:0.65rem;opacity:.8">${dayName}</span>
+          <span class="text-sm font-bold">${dayNum}</span>
+          ${isToday ? '<span style="font-size:0.55rem;opacity:.7">auj.</span>' : ''}
+        </button>`;
+      }).join('');
+    } catch(err) { /* ne pas bloquer renderEvents */ }
   }
 
   function setDate(date) {
