@@ -40,17 +40,6 @@ const Analytics = (() => {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="stat-card">
-            <h3 class="text-sm font-semibold mb-3" style="color:var(--text-muted)">Répartition des notes</h3>
-            <canvas id="anlGradeChart" height="110"></canvas>
-          </div>
-          <div class="stat-card">
-            <h3 class="text-sm font-semibold mb-3" style="color:var(--text-muted)">Win Rate par note</h3>
-            <canvas id="anlGradeWrChart" height="110"></canvas>
-          </div>
-        </div>
-
         <div class="stat-card">
           <h3 class="text-sm font-semibold mb-4" style="color:var(--text-muted)">Heatmap de performance — 26 dernières semaines</h3>
           <div id="anlHeatmap" class="overflow-x-auto"></div>
@@ -62,7 +51,6 @@ const Analytics = (() => {
       _drawDD(sorted, s);
       _drawHour(trades, sym);
       _drawAsset(trades, sym);
-      _drawGrades(trades);
       _drawHeatmap(trades);
     });
   }
