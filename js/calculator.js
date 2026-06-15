@@ -285,8 +285,18 @@ const Calculator = (() => {
 
     if (pipVal > 0) {
       const lots = riskAmount / (distPips * pipVal);
-      lotsStr   = lots.toFixed(2) + ' lots';
-      if (inst?.lot) lotDetail = `= ${inst.lot} × ${lots.toFixed(2)}`;
+      lotsStr   = fmtLots(lots) + ' lots';
+      if (inst?.lot) {
+        // Affichage lisible : standard / mini / micro / nano
+        const mini  = lots * 10;
+        const micro = lots * 100;
+        const nano  = lots * 1000;
+        const equiv = lots >= 0.1  ? `${fmtLots(lots)} lot standard`
+                    : micro >= 0.1 ? `${fmtLots(micro)} micro-lots (0.01)`
+                    : nano  >= 0.1 ? `${fmtLots(nano)} nano-lots (0.001)`
+                    :                `${fmtLots(lots)} lot`;
+        lotDetail = equiv;
+      }
 
       if (tp && !isNaN(tp)) {
         const gainDist = Math.abs(tp - entry);
@@ -296,9 +306,8 @@ const Calculator = (() => {
         rrStr   = (gainDist / distance).toFixed(2);
       }
     } else {
-      // Without pip value: express in units
       const units = riskAmount / distance;
-      lotsStr = units.toFixed(2) + ' unités';
+      lotsStr = fmtLots(units) + ' unités';
       if (tp && !isNaN(tp)) rrStr = (Math.abs(tp - entry) / distance).toFixed(2);
     }
 
@@ -320,6 +329,14 @@ const Calculator = (() => {
         Risque : <span style="color:${riskColor};font-weight:600">${riskPct}% du capital</span>
         ${riskPct > 2 ? ' — ⚠️ Risque élevé' : riskPct > 1 ? ' — Risque modéré' : ' — Risque prudent'}
       </div>`;
+  }
+
+  function fmtLots(n) {
+    if (n >= 1)      return n.toFixed(2);
+    if (n >= 0.1)    return n.toFixed(2);
+    if (n >= 0.01)   return n.toFixed(3);
+    if (n >= 0.001)  return n.toFixed(4);
+    return n.toFixed(5);
   }
 
   function row(label, value, color) {
