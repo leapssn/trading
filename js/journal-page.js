@@ -17,6 +17,7 @@ const JournalPage = (() => {
     const typeLabel = { real:'Réel', prop:'Prop Firm', demo:'Démo' }[journal?.type] || '';
     const typeBadge = { real:'badge-real', prop:'badge-prop', demo:'badge-demo' }[journal?.type] || '';
     const capital   = journal?.capital || 0;
+    const sym       = Journals.symbol(journal);
 
     // ── Bannière Prop Firm ───────────────────────────────
     let banner = '';
@@ -47,7 +48,7 @@ const JournalPage = (() => {
             ${goalHit   ? '<span class="ml-auto text-green-400 font-bold text-sm">OBJECTIF ATTEINT 🎉</span>'  : ''}
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            ${propKpi('Capital', '$'+capital.toLocaleString(), 'var(--text-primary)')}
+            ${propKpi('Capital', sym+capital.toLocaleString(), 'var(--text-primary)')}
             ${propKpi('Drawdown total', ddPct+'% / '+(journal.drawdown||'—')+'%', ddOver ? '#ef4444' : 'var(--text-primary)')}
             ${journal.dailyLoss ? propKpi('Perte journalière', dailyLossPct+'% / '+journal.dailyLoss+'%', dailyOver ? '#ef4444' : 'var(--text-primary)') : ''}
             ${propKpi('Progression', profPct+'% / '+(journal.target||'—')+'%', goalHit ? '#22c55e' : 'var(--text-primary)')}
@@ -62,10 +63,10 @@ const JournalPage = (() => {
       banner = `
         <div class="mb-5 p-4 rounded-xl border" style="border-color:var(--border)">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            ${propKpi('Capital initial', '$'+capital.toLocaleString(), 'var(--text-muted)')}
-            ${propKpi('Solde actuel',   '$'+parseFloat(balance).toLocaleString(), s.total >= 0 ? '#22c55e' : '#ef4444')}
-            ${propKpi('Performance',    (s.total>=0?'+':'')+perfPct+'%',            s.total >= 0 ? '#22c55e' : '#ef4444')}
-            ${propKpi('P&L net',        (s.total>=0?'+$':'−$')+Math.abs(s.total).toFixed(2), s.total >= 0 ? '#22c55e' : '#ef4444')}
+            ${propKpi('Capital initial', sym+capital.toLocaleString(), 'var(--text-muted)')}
+            ${propKpi('Solde actuel',    sym+parseFloat(balance).toLocaleString(), s.total >= 0 ? '#22c55e' : '#ef4444')}
+            ${propKpi('Performance',     (s.total>=0?'+':'')+perfPct+'%', s.total >= 0 ? '#22c55e' : '#ef4444')}
+            ${propKpi('P&L net',         (s.total>=0?'+':'-')+sym+Math.abs(s.total).toFixed(2), s.total >= 0 ? '#22c55e' : '#ef4444')}
           </div>
         </div>`;
     }
@@ -73,6 +74,7 @@ const JournalPage = (() => {
     // ── Lignes du tableau ────────────────────────────────
     const rows = sorted.map(t => {
       const pnlClass = t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+      const pnlVal   = `${t.pnl>=0?'+':'-'}${sym}${Math.abs(t.pnl||0).toFixed(2)}`;
       const pct      = t.pnlPct != null ? `<span class="${pnlClass} text-xs">(${t.pnlPct >= 0 ? '+' : ''}${t.pnlPct.toFixed(2)}%)</span>` : '';
       const imgBtn   = t.image
         ? `<button onclick="JournalPage.showImage('${t.id}')" class="text-brand underline text-xs">Voir</button>`
@@ -86,7 +88,7 @@ const JournalPage = (() => {
           <td>${t.size}</td>
           <td>${t.entry}</td>
           <td>${t.exit}</td>
-          <td class="${pnlClass}">${t.pnl >= 0 ? '+' : ''}$${(t.pnl||0).toFixed(2)} ${pct}</td>
+          <td class="${pnlClass}">${pnlVal} ${pct}</td>
           <td style="color:var(--text-faint);font-size:0.8rem">${EMOTIONS[t.emotion] || '—'}</td>
           <td>${imgBtn}</td>
           <td>
@@ -118,10 +120,10 @@ const JournalPage = (() => {
 
         <!-- KPIs -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          ${kpi('P&L Total', `${s.total >= 0 ? '+' : ''}$${s.total.toFixed(2)}`, s.total >= 0 ? 'pnl-pos' : 'pnl-neg')}
-          ${kpi('Win Rate', `${s.winRate.toFixed(1)}%`, '')}
-          ${kpi('Gain moyen', `+$${s.avgWin.toFixed(2)}`, 'pnl-pos')}
-          ${kpi('Perte moyenne', `-$${Math.abs(s.avgLoss).toFixed(2)}`, 'pnl-neg')}
+          ${kpi('P&L Total',     (s.total>=0?'+':'-')+sym+Math.abs(s.total).toFixed(2), s.total >= 0 ? 'pnl-pos' : 'pnl-neg')}
+          ${kpi('Win Rate',      s.winRate.toFixed(1)+'%', '')}
+          ${kpi('Gain moyen',    '+'+sym+s.avgWin.toFixed(2), 'pnl-pos')}
+          ${kpi('Perte moyenne', '-'+sym+Math.abs(s.avgLoss).toFixed(2), 'pnl-neg')}
         </div>
 
         <!-- Tableau -->

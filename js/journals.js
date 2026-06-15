@@ -10,11 +10,14 @@ const Journals = (() => {
 
     if (!name) { alert('Veuillez entrer un nom pour le journal.'); return; }
 
+    const currency = document.getElementById('jCurrency')?.value || 'USD';
+
     const journal = {
       id:        Store.uid(),
       name,
       type,
       capital,
+      currency,
       createdAt: new Date().toISOString(),
     };
 
@@ -51,5 +54,8 @@ const Journals = (() => {
   function activeId() { return Store.activeJournal.get(); }
   function active()   { return Store.journals.getById(activeId()); }
 
-  return { create, remove, activeId, active };
+  const SYMBOLS = { USD:'$', EUR:'€', GBP:'£', CHF:'CHF ', CAD:'CA$', AUD:'A$', JPY:'¥' };
+  function symbol(journal) { return SYMBOLS[journal?.currency] || '$'; }
+
+  return { create, remove, activeId, active, symbol };
 })();

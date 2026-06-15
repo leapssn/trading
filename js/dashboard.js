@@ -35,6 +35,7 @@ const Dashboard = (() => {
     // Bannière Prop Firm / Réel / Démo
     const typeBadge = { real:'badge-real', prop:'badge-prop', demo:'badge-demo' }[journal?.type] || '';
     const typeLabel = { real:'Compte Réel', prop:'Prop Firm', demo:'Démo' }[journal?.type] || '';
+    const sym = Journals.symbol(journal);
 
     let accountBanner = '';
     if (journal?.type === 'prop' && capital) {
@@ -58,7 +59,7 @@ const Dashboard = (() => {
         <div class="rounded-xl border p-4 ${border} ${bg} flex flex-wrap items-center gap-4">
           <span class="text-2xl">${ddOver||dlOver ? '⛔' : goalHit ? '🏆' : '📋'}</span>
           <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-            ${propKpi('Capital', '$'+capital.toLocaleString())}
+            ${propKpi('Capital', sym+capital.toLocaleString())}
             ${propKpi('Drawdown', ddPct+'% / '+(journal.drawdown||'—')+'%', ddOver?'#ef4444':null)}
             ${journal.dailyLoss ? propKpi('Perte/jour', dlPct+'% / '+journal.dailyLoss+'%', dlOver?'#ef4444':null) : ''}
             ${propKpi('Objectif', profPct+'% / '+(journal.target||'—')+'%', goalHit?'#22c55e':null)}
@@ -73,10 +74,10 @@ const Dashboard = (() => {
       accountBanner = `
         <div class="rounded-xl border p-4" style="border-color:var(--border)">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            ${propKpi('Capital initial', '$'+capital.toLocaleString())}
-            ${propKpi('Solde actuel', '$'+parseFloat(balance).toLocaleString(), as.total>=0?'#22c55e':'#ef4444')}
+            ${propKpi('Capital initial', sym+capital.toLocaleString())}
+            ${propKpi('Solde actuel', sym+parseFloat(balance).toLocaleString(), as.total>=0?'#22c55e':'#ef4444')}
             ${propKpi('Performance', (as.total>=0?'+':'')+perfPct+'%', as.total>=0?'#22c55e':'#ef4444')}
-            ${propKpi('P&L net', (as.total>=0?'+$':'−$')+Math.abs(as.total).toFixed(2), as.total>=0?'#22c55e':'#ef4444')}
+            ${propKpi('P&L net', (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'#22c55e':'#ef4444')}
           </div>
         </div>`;
     }
@@ -91,16 +92,17 @@ const Dashboard = (() => {
         <td style="color:var(--text-faint)">${(t.date||'').slice(0,10)}</td>
         <td class="font-medium" style="color:var(--text-primary)">${t.asset}</td>
         <td><span class="badge badge-${t.side}">${t.side==='buy'?'▲ Long':'▼ Short'}</span></td>
-        <td class="${t.pnl>=0?'pnl-pos':'pnl-neg'}">${t.pnl>=0?'+':''}$${(t.pnl||0).toFixed(2)}</td>
+        <td class="${t.pnl>=0?'pnl-pos':'pnl-neg'}">${t.pnl>=0?'+':'-'}${sym}${Math.abs(t.pnl||0).toFixed(2)}</td>
         ${t.pnlPct!=null ? `<td class="${t.pnl>=0?'pnl-pos':'pnl-neg'} text-xs">${t.pnl>=0?'+':''}${t.pnlPct.toFixed(2)}%</td>` : '<td>—</td>'}
       </tr>`).join('');
 
     // Cartes des autres journaux (résumé global bas de page)
     const otherCards = journals.map(j => {
-      const jt = allTrades.filter(t => t.journalId === j.id);
-      const s  = Trades.stats(jt);
-      const tb = { real:'badge-real', prop:'badge-prop', demo:'badge-demo' }[j.type]||'';
-      const tl = { real:'Réel', prop:'Prop Firm', demo:'Démo' }[j.type]||j.type;
+      const jt  = allTrades.filter(t => t.journalId === j.id);
+      const s   = Trades.stats(jt);
+      const tb  = { real:'badge-real', prop:'badge-prop', demo:'badge-demo' }[j.type]||'';
+      const tl  = { real:'Réel', prop:'Prop Firm', demo:'Démo' }[j.type]||j.type;
+      const js  = Journals.symbol(j);
       const isActive = j.id === journal?.id;
       return `
         <div class="stat-card ${isActive ? 'border-brand/50' : ''} cursor-pointer hover:border-brand/50 transition"
@@ -113,7 +115,7 @@ const Dashboard = (() => {
             <span class="badge ${tb}">${tl}</span>
           </div>
           <div class="grid grid-cols-3 gap-3 text-center">
-            <div><div class="form-label">P&L</div><div class="text-lg font-bold ${s.total>=0?'pnl-pos':'pnl-neg'}">${s.total>=0?'+':''}$${s.total.toFixed(2)}</div></div>
+            <div><div class="form-label">P&L</div><div class="text-lg font-bold ${s.total>=0?'pnl-pos':'pnl-neg'}">${s.total>=0?'+':'-'}${js}${Math.abs(s.total).toFixed(2)}</div></div>
             <div><div class="form-label">Win Rate</div><div class="text-lg font-bold" style="color:var(--text-primary)">${s.winRate.toFixed(1)}%</div></div>
             <div><div class="form-label">Trades</div><div class="text-lg font-bold" style="color:var(--text-primary)">${s.count}</div></div>
           </div>
@@ -136,10 +138,10 @@ const Dashboard = (() => {
 
         <!-- KPIs compte actif -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          ${kpi('P&L Total',    (as.total>=0?'+':'')+'$'+as.total.toFixed(2),  as.total>=0?'pnl-pos':'pnl-neg', '💰')}
-          ${kpi('Win Rate',     as.winRate.toFixed(1)+'%',                      '',                              '🎯')}
-          ${kpi('Trades',       as.count,                                        '',                              '📊')}
-          ${kpi('Gain moyen',   '+$'+as.avgWin.toFixed(2),                      'pnl-pos',                       '⬆️')}
+          ${kpi('P&L Total',  (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'pnl-pos':'pnl-neg', '💰')}
+          ${kpi('Win Rate',   as.winRate.toFixed(1)+'%', '', '🎯')}
+          ${kpi('Trades',     as.count, '', '📊')}
+          ${kpi('Gain moyen', '+'+sym+as.avgWin.toFixed(2), 'pnl-pos', '⬆️')}
         </div>
 
         <!-- Graphes compte actif -->

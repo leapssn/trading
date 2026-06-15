@@ -262,9 +262,23 @@
             <option value="demo">🧪 Démo</option>
           </select>
         </div>
-        <div>
-          <label class="form-label">Capital de départ ($)</label>
-          <input id="jCapital" type="number" min="0" placeholder="Ex: 10 000" class="form-input" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Capital de départ (dans la devise choisie)</label>
+            <input id="jCapital" type="number" min="0" placeholder="Ex: 10 000" class="form-input" />
+          </div>
+          <div>
+            <label class="form-label">Devise du compte</label>
+            <select id="jCurrency" class="form-input">
+              <option value="USD">🇺🇸 USD — $</option>
+              <option value="EUR">🇪🇺 EUR — €</option>
+              <option value="GBP">🇬🇧 GBP — £</option>
+              <option value="CHF">🇨🇭 CHF — CHF</option>
+              <option value="CAD">🇨🇦 CAD — CA$</option>
+              <option value="AUD">🇦🇺 AUD — A$</option>
+              <option value="JPY">🇯🇵 JPY — ¥</option>
+            </select>
+          </div>
         </div>
         <div id="propSection" class="hidden space-y-4 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5">
           <p class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">Règles Prop Firm</p>
