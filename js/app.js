@@ -9,6 +9,7 @@ const App = (() => {
     journal:    { render: c => JournalPage.render(c),     label: 'Journal' },
     strategies: { render: c => Strategies.render(c),      label: 'Stratégies' },
     calendar:   { render: c => MarketCalendar.render(c),  label: 'Sessions' },
+    economics:  { render: c => Economics.render(c),       label: 'Économie' },
     notebook:   { render: c => Notebook.render(c),        label: 'Bloc-notes' },
   };
 

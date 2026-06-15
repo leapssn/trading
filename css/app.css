@@ -1,3 +1,20 @@
+/* Tab buttons */
+.tab-btn { cursor: pointer; transition: all 0.15s; }
+
+/* Impact filter buttons */
+.impact-btn {
+  background: #252840;
+  border: 1px solid #2e3256;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.impact-btn:hover { color: #fff; border-color: #6366f1; }
+.impact-btn.impact-active { background: #6366f1; border-color: #6366f1; color: #fff; }
+
 /* Nav links */
 .nav-link {
   display: flex;
