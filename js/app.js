@@ -68,10 +68,26 @@ const App = (() => {
     const opts = journals.map(j =>
       `<option value="${j.id}" ${j.id === active ? 'selected' : ''}>${j.name}</option>`
     ).join('');
-    ['journalSelector', 'journalSelectorMobile', 'journalSelectorDrawer'].forEach(id => {
+    ['journalSelector', 'journalSelectorMobile'].forEach(id => {
       const sel = document.getElementById(id);
       if (sel) sel.innerHTML = opts;
     });
+    // Drawer : liste de boutons cliquables
+    const list = document.getElementById('journalListDrawer');
+    if (list) {
+      list.innerHTML = journals.map(j => {
+        const isActive = j.id === active;
+        return `<button onclick="Store.activeJournal.set('${j.id}');App.refreshJournalSelector();App.render(App.currentPage)"
+          class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2"
+          style="${isActive
+            ? 'background:var(--brand);color:#fff'
+            : 'background:var(--bg-hover);color:var(--text-muted)'}">
+          ${isActive ? '<span>●</span>' : '<span style="opacity:.3">○</span>'}
+          ${j.name}
+          <span class="ml-auto text-xs opacity-60">${{real:'Réel',prop:'Prop',demo:'Démo'}[j.type]||''}</span>
+        </button>`;
+      }).join('');
+    }
   }
 
   function navigate(page) {
