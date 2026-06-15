@@ -43,8 +43,13 @@ const Notebook = (() => {
   // ── Render principal ──────────────────────────────────────
   function render(container) {
     loadPages();
+    // Le container doit remplir exactement la zone disponible
+    container.style.height = '100%';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+
     container.innerHTML = `
-      <div class="flex flex-col" style="height:100vh">
+      <div class="flex flex-col" style="flex:1;min-height:0;overflow:hidden">
 
         <!-- Barre d'onglets -->
         <div class="flex items-center border-b overflow-x-auto shrink-0" style="border-color:var(--border);background:var(--bg-sidebar)">
