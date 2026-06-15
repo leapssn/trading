@@ -100,7 +100,10 @@ const App = (() => {
   }
 
   function render(page) {
-    Object.keys(PAGES).forEach(p => document.getElementById(`page-${p}`)?.classList.add('hidden'));
+    Object.keys(PAGES).forEach(p => {
+      const el = document.getElementById(`page-${p}`);
+      if (el) { el.classList.add('hidden'); el.style.display = ''; }
+    });
     const container = document.getElementById(`page-${page}`);
     if (!container) return;
     container.classList.remove('hidden');
