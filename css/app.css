@@ -256,6 +256,54 @@
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 .animate-pulse  { animation: pulse 2s ease-in-out infinite; }
 
+/* ── Toolbar boutons ─────────────────────────────────────── */
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.toolbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ── Notion-like éditeur ─────────────────────────────────── */
+.notion-editor h1 { font-size: 1.9rem; font-weight: 700; color: var(--text-primary); margin: 1.2em 0 0.3em; }
+.notion-editor h2 { font-size: 1.4rem; font-weight: 600; color: var(--text-primary); margin: 1em 0 0.3em; }
+.notion-editor h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0.8em 0 0.2em; }
+.notion-editor p  { margin: 0.2em 0; color: var(--text-muted); }
+.notion-editor ul { list-style: disc;    padding-left: 1.5em; margin: 0.4em 0; color: var(--text-muted); }
+.notion-editor ol { list-style: decimal; padding-left: 1.5em; margin: 0.4em 0; color: var(--text-muted); }
+.notion-editor li { margin: 0.15em 0; }
+.notion-editor blockquote {
+  border-left: 3px solid var(--brand);
+  padding: 4px 14px;
+  margin: 0.6em 0;
+  color: var(--text-faint);
+  background: rgba(99,102,241,0.05);
+  border-radius: 0 6px 6px 0;
+}
+.notion-editor hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.notion-editor a  { color: var(--brand); text-decoration: underline; }
+.notion-editor b, .notion-editor strong { color: var(--text-primary); }
+.notion-editor [contenteditable]:empty:before { content: attr(placeholder); opacity: 0.3; pointer-events: none; }
+
+/* Placeholder éditeur vide */
+.notion-editor:empty:before {
+  content: "Commence à écrire, ou utilise la barre d'outils ci-dessus…";
+  color: var(--text-faint);
+  opacity: 0.5;
+  pointer-events: none;
+  display: block;
+}
+
 /* ── Light mode overrides ────────────────────────────────── */
 .light .stat-card      { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .light .page-header    { box-shadow: 0 1px 0 var(--border); }
