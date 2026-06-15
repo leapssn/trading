@@ -1,0 +1,28 @@
+name: Update Economic Calendar
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'   # lundi 00h00 UTC (début de semaine FF)
+    - cron: '0 6 * * 1-5' # lun-ven 06h00 UTC (mise à jour matinale)
+  workflow_dispatch:        # déclenchement manuel possible
+
+jobs:
+  fetch-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ForexFactory calendar
+        run: |
+          curl -s -o data/calendar.json \
+            -H "User-Agent: Mozilla/5.0" \
+            "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+          echo "Fetched $(wc -c < data/calendar.json) bytes"
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/calendar.json
+          git diff --cached --quiet || git commit -m "chore: update economic calendar data"
+          git push

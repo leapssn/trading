@@ -3,14 +3,13 @@
 // ============================================================
 const Economics = (() => {
 
-  const FF_URL  = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
-  // Essai direct d'abord, puis plusieurs proxies en fallback
+  const FF_URL      = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+  const LOCAL_DATA  = 'data/calendar.json';  // mis à jour par GitHub Actions
   const PROXIES = [
-    url => url,                                                               // direct (si FF a CORS)
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,               // proxy 1
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,  // proxy 2
-    url => `https://api.codetabs.com/v1/proxy?quest=${url}`,                 // proxy 3
-    url => `https://thingproxy.freeboard.io/fetch/${url}`,                   // proxy 4
+    url => url,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${url}`,
   ];
 
   let _filterCurrency = null;
@@ -360,24 +359,38 @@ const Economics = (() => {
   async function loadEvents() {
     if (_cachedEvents) { renderEvents(_cachedEvents); return; }
     let data = null;
-    for (const proxyFn of PROXIES) {
-      try {
-        const res = await fetch(proxyFn(FF_URL), { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) continue;
-        const text = await res.text();
-        data = JSON.parse(text);
-        if (data?.contents) data = JSON.parse(data.contents);
-        if (Array.isArray(data)) break;
-      } catch { /* essaie le proxy suivant */ }
+
+    // 1) Fichier local mis à jour par GitHub Actions (même origine, pas de CORS)
+    try {
+      const res = await fetch(LOCAL_DATA + '?t=' + Date.now(), { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json) && json.length > 0) data = json;
+      }
+    } catch { /* pas disponible, on continue */ }
+
+    // 2) Si le fichier local est vide ou absent → proxies externes
+    if (!data) {
+      for (const proxyFn of PROXIES) {
+        try {
+          const res = await fetch(proxyFn(FF_URL), { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) continue;
+          const text = await res.text();
+          let parsed = JSON.parse(text);
+          if (parsed?.contents) parsed = JSON.parse(parsed.contents);
+          if (Array.isArray(parsed) && parsed.length > 0) { data = parsed; break; }
+        } catch { /* essaie le suivant */ }
+      }
     }
+
     if (!data) {
       document.getElementById('ecoList').innerHTML = `
         <div class="stat-card text-center py-10">
           <p class="text-3xl mb-3">🌐</p>
           <p class="font-medium mb-2" style="color:var(--text-primary)">Impossible de charger les annonces</p>
           <p class="text-sm mb-3" style="color:var(--text-faint)">
-            Si vous avez un bloqueur de publicités (uBlock, AdBlock…), il bloque peut-être les requêtes vers les proxies.<br>
-            Essayez de le désactiver temporairement sur cette page.
+            Les données se mettent à jour automatiquement chaque lundi matin.<br>
+            Si le problème persiste, vérifiez votre connexion.
           </p>
           <button onclick="Economics.reload()" class="btn-primary text-sm">Réessayer</button>
         </div>`;
