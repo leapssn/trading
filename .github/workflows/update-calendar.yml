@@ -2,9 +2,9 @@ name: Update Economic Calendar
 
 on:
   schedule:
-    - cron: '0 0 * * 1'   # lundi 00h00 UTC (début de semaine FF)
-    - cron: '0 6 * * 1-5' # lun-ven 06h00 UTC (mise à jour matinale)
-  workflow_dispatch:        # déclenchement manuel possible
+    - cron: '0 0 * * 1'   # lundi 00h00 UTC
+    - cron: '0 6 * * 1-5' # lun-ven 06h00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,17 +18,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch ForexFactory calendar
+      - name: Fetch & validate ForexFactory calendar
         run: |
-          curl -s -o data/calendar.json \
-            -H "User-Agent: Mozilla/5.0" \
+          curl -s -o /tmp/ff_raw.json \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept: application/json, text/plain, */*" \
+            -H "Referer: https://www.forexfactory.com/" \
             "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
-          echo "Fetched $(wc -c < data/calendar.json) bytes"
+
+          echo "--- Premiers octets reçus ---"
+          head -c 200 /tmp/ff_raw.json
+
+          # Vérifier que c'est du JSON valide (tableau non vide)
+          if python3 -c "
+          import json, sys
+          data = json.load(open('/tmp/ff_raw.json'))
+          assert isinstance(data, list) and len(data) > 0, 'Not a non-empty array'
+          print(f'OK: {len(data)} events')
+          "; then
+            cp /tmp/ff_raw.json data/calendar.json
+            echo "Fichier mis à jour."
+          else
+            echo "Réponse invalide (rate-limit ou HTML) — fichier non modifié."
+            exit 1
+          fi
 
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/calendar.json
-          git diff --cached --quiet || git commit -m "chore: update economic calendar data"
-          git push
+          git diff --cached --quiet && echo "Aucun changement." || \
+            (git commit -m "chore: update economic calendar data" && git push)
