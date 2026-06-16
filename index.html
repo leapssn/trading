@@ -170,9 +170,9 @@
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard    </a>
-        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal      </a>
-        <a href="#analytics"  class="nav-link" data-page="analytics">  <span>📈</span> Analytiques  </a>
+        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></a>
+        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal      <span class="nav-lock" data-lock="journal"></span></a>
+        <a href="#analytics"  class="nav-link" data-page="analytics">  <span>📈</span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></a>
         <a href="#calculator" class="nav-link" data-page="calculator"> <span>🧮</span> Calculateur  </a>
         <a href="#markets"    class="nav-link" data-page="markets">    <span>🌐</span> Marchés      </a>
         <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies   </a>
@@ -257,9 +257,9 @@
       </div>
       <!-- Nav links -->
       <nav class="px-3 py-3 space-y-1 flex-1">
-        <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span>🏠</span> Dashboard    </button>
-        <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span>📒</span> Journal      </button>
-        <button onclick="App.navigate('analytics');App.closeDrawer()"   class="drawer-nav-btn" data-page="analytics">  <span>📈</span> Analytiques  </button>
+        <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span>🏠</span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></button>
+        <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span>📒</span> Journal      <span class="nav-lock" data-lock="journal"></span></button>
+        <button onclick="App.navigate('analytics');App.closeDrawer()"   class="drawer-nav-btn" data-page="analytics">  <span>📈</span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></button>
         <button onclick="App.navigate('calculator');App.closeDrawer()"  class="drawer-nav-btn" data-page="calculator"> <span>🧮</span> Calculateur  </button>
         <button onclick="App.navigate('markets');App.closeDrawer()"     class="drawer-nav-btn" data-page="markets">    <span>🌐</span> Marchés      </button>
         <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span>🧠</span> Stratégies   </button>
@@ -451,23 +451,24 @@
   </div>
 
   <!-- Scripts — v5 (cache bust) -->
-  <script src="js/firebase-config.js?v=10"></script>
-  <script src="js/store.js?v=10"></script>
-  <script src="js/assets.js?v=10"></script>
-  <script src="js/theme.js?v=10"></script>
-  <script src="js/auth.js?v=10"></script>
-  <script src="js/journals.js?v=10"></script>
-  <script src="js/trades.js?v=10"></script>
-  <script src="js/dashboard.js?v=10"></script>
-  <script src="js/journal-page.js?v=10"></script>
-  <script src="js/analytics.js?v=10"></script>
-  <script src="js/calculator.js?v=10"></script>
-  <script src="js/markets.js?v=10"></script>
-  <script src="js/strategies.js?v=10"></script>
-  <script src="js/calendar.js?v=10"></script>
-  <script src="js/economics.js?v=10"></script>
-  <script src="js/notebook.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/firebase-config.js?v=11"></script>
+  <script src="js/store.js?v=11"></script>
+  <script src="js/assets.js?v=11"></script>
+  <script src="js/theme.js?v=11"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/journals.js?v=11"></script>
+  <script src="js/trades.js?v=11"></script>
+  <script src="js/dashboard.js?v=11"></script>
+  <script src="js/journal-page.js?v=11"></script>
+  <script src="js/analytics.js?v=11"></script>
+  <script src="js/calculator.js?v=11"></script>
+  <script src="js/markets.js?v=11"></script>
+  <script src="js/strategies.js?v=11"></script>
+  <script src="js/calendar.js?v=11"></script>
+  <script src="js/economics.js?v=11"></script>
+  <script src="js/notebook.js?v=11"></script>
+  <script src="js/paywall.js?v=11"></script>
+  <script src="js/app.js?v=11"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

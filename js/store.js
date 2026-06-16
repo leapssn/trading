@@ -8,7 +8,8 @@
 const Store = (() => {
 
   // ── Cache local ──────────────────────────────────────────
-  let _uid   = null;   // userId Firebase
+  let _uid     = null;   // userId Firebase
+  let _premium = false;
   let _cache = { journals: [], trades: [], strategies: [], notes: {} };
 
   // ── Helpers Firestore ─────────────────────────────────────
@@ -24,7 +25,13 @@ const Store = (() => {
       _load('trades'),
       _load('strategies'),
       _loadNotes(),
+      _loadProfile(),
     ]);
+  }
+
+  async function _loadProfile() {
+    const doc = await db.collection('users').doc(_uid).get();
+    _premium = !!(doc.exists && doc.data().premium);
   }
 
   async function _load(collName) {
@@ -42,7 +49,8 @@ const Store = (() => {
 
   // Réinitialise le cache (déconnexion)
   function reset() {
-    _uid  = null;
+    _uid     = null;
+    _premium = false;
     _cache = { journals: [], trades: [], strategies: [], notes: {} };
   }
 
@@ -154,5 +162,14 @@ const Store = (() => {
     set:  (id) => { if (id) localStorage.setItem(`tl_active_${_uid}`, id); },
   };
 
-  return { init, reset, uid, journals, trades, strategies, notes, activeJournal, compressImage };
+  // ── ABONNEMENT (placeholder en attendant Stripe) ──────────
+  const subscription = {
+    isPremium: () => _premium,
+    setPremium: async (value) => {
+      _premium = !!value;
+      await db.collection('users').doc(_uid).set({ premium: _premium }, { merge: true });
+    },
+  };
+
+  return { init, reset, uid, journals, trades, strategies, notes, activeJournal, subscription, compressImage };
 })();

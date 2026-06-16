@@ -34,6 +34,7 @@ const App = (() => {
     setupNav();
     setupJournalSelector();
     populateAssetSelect();
+    refreshNavLocks();
 
     const hash = location.hash.replace('#', '');
     navigate(PAGES[hash] ? hash : 'dashboard');
@@ -57,6 +58,13 @@ const App = (() => {
       Store.activeJournal.set(e.target.value);
       render(_currentPage);
     };
+  }
+
+  function refreshNavLocks() {
+    const premium = Store.subscription.isPremium();
+    document.querySelectorAll('.nav-lock').forEach(el => {
+      el.textContent = (Paywall.isGated(el.dataset.lock) && !premium) ? ' 🔒' : '';
+    });
   }
 
   function populateAssetSelect() {
@@ -124,6 +132,10 @@ const App = (() => {
     const container = document.getElementById(`page-${page}`);
     if (!container) return;
     container.classList.remove('hidden');
+    if (Paywall.isGated(page) && !Store.subscription.isPremium()) {
+      Paywall.render(container, page);
+      return;
+    }
     PAGES[page].render(container);
   }
 
@@ -141,7 +153,7 @@ const App = (() => {
 
   return {
     init, render, navigate, openModal, closeModal, refreshJournalSelector,
-    openDrawer, closeDrawer,
+    openDrawer, closeDrawer, refreshNavLocks,
     get currentPage() { return _currentPage; },
   };
 })();
