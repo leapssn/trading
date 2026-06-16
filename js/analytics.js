@@ -138,44 +138,6 @@ const Analytics = (() => {
     });
   }
 
-  function _drawGrades(trades) {
-    _kill('grade'); _kill('gradeWr');
-    const gCtx  = document.getElementById('anlGradeChart');
-    const wrCtx = document.getElementById('anlGradeWrChart');
-    const { grid, tick } = _css();
-    const colors = { A: '#22c55e', B: '#6366f1', C: '#f59e0b', '—': '#64748b' };
-    const gd = { A: { n: 0, w: 0 }, B: { n: 0, w: 0 }, C: { n: 0, w: 0 }, '—': { n: 0, w: 0 } };
-    trades.forEach(t => {
-      const g = t.grade || '—';
-      if (!gd[g]) gd[g] = { n: 0, w: 0 };
-      gd[g].n++;
-      if (t.pnl > 0) gd[g].w++;
-    });
-    const used = ['A', 'B', 'C', '—'].filter(g => gd[g].n > 0);
-    if (!used.length) return;
-    if (gCtx) {
-      _ch.grade = new Chart(gCtx, {
-        type: 'doughnut',
-        data: { labels: used, datasets: [{ data: used.map(g => gd[g].n), backgroundColor: used.map(g => colors[g]), borderWidth: 0 }] },
-        options: { plugins: { legend: { display: true, position: 'right', labels: { color: tick, boxWidth: 12 } } }, cutout: '60%' }
-      });
-    }
-    if (wrCtx) {
-      _ch.gradeWr = new Chart(wrCtx, {
-        type: 'bar',
-        data: {
-          labels: used,
-          datasets: [{ data: used.map(g => gd[g].n ? +(gd[g].w / gd[g].n * 100).toFixed(1) : 0), backgroundColor: used.map(g => colors[g]), borderRadius: 4 }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}%` } } },
-          scales: { x: { grid: { color: grid }, ticks: { color: tick } }, y: { grid: { color: grid }, ticks: { color: tick, callback: v => v + '%' }, min: 0, max: 100 } },
-        }
-      });
-    }
-  }
-
   function _drawHeatmap(trades) {
     const container = document.getElementById('anlHeatmap');
     if (!container) return;

@@ -1,5 +1,5 @@
 // Service Worker — TradingLog PWA
-const CACHE = 'tradinglog-v2';
+const CACHE = 'tradinglog-v3';
 const STATIC = [
   '/trading/',
   '/trading/index.html',
