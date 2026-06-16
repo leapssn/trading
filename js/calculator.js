@@ -327,7 +327,7 @@ const Calculator = (() => {
       </div>
       <div class="mt-4 p-3 rounded-lg text-xs" style="background:var(--bg-input);color:var(--text-faint)">
         Risque : <span style="color:${riskColor};font-weight:600">${riskPct}% du capital</span>
-        ${riskPct > 2 ? ' — ⚠️ Risque élevé' : riskPct > 1 ? ' — Risque modéré' : ' — Risque prudent'}
+        ${riskPct > 2 ? ' — Risque élevé' : riskPct > 1 ? ' — Risque modéré' : ' — Risque prudent'}
       </div>`;
   }
 

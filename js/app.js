@@ -63,7 +63,7 @@ const App = (() => {
   function refreshNavLocks() {
     const premium = Store.subscription.isPremium();
     document.querySelectorAll('.nav-lock').forEach(el => {
-      el.textContent = (Paywall.isGated(el.dataset.lock) && !premium) ? ' 🔒' : '';
+      el.innerHTML = (Paywall.isGated(el.dataset.lock) && !premium) ? ' ' + Icons.lock : '';
     });
   }
 

@@ -303,8 +303,8 @@ const Economics = (() => {
       </div>
       <div class="content-area space-y-6">
         <div class="flex gap-2 border-b" style="border-color:var(--border)">
-          <button id="tab-eco"     onclick="Economics.switchTab('eco')"     class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-brand -mb-px" style="color:var(--text-primary)">📅 Annonces éco.</button>
-          <button id="tab-spreads" onclick="Economics.switchTab('spreads')" class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-transparent -mb-px transition" style="color:var(--text-faint)">📊 Spreads</button>
+          <button id="tab-eco"     onclick="Economics.switchTab('eco')"     class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-brand -mb-px flex items-center gap-2" style="color:var(--text-primary)">${Icons.calendarIcon} Annonces éco.</button>
+          <button id="tab-spreads" onclick="Economics.switchTab('spreads')" class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 border-transparent -mb-px transition flex items-center gap-2" style="color:var(--text-faint)">${Icons.barChart} Spreads</button>
         </div>
 
         <div id="tab-eco-content">
@@ -330,14 +330,14 @@ const Economics = (() => {
               <label class="form-label">Impact</label>
               <div class="flex gap-2">
                 <button onclick="Economics.setImpact(null)"     id="imp-all"    class="impact-btn impact-active">Tout</button>
-                <button onclick="Economics.setImpact('high')"   id="imp-high"   class="impact-btn">🔴 Fort</button>
-                <button onclick="Economics.setImpact('medium')" id="imp-medium" class="impact-btn">🟠 Moyen</button>
-                <button onclick="Economics.setImpact('low')"    id="imp-low"    class="impact-btn">🟡 Faible</button>
+                <button onclick="Economics.setImpact('high')"   id="imp-high"   class="impact-btn flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Fort</button>
+                <button onclick="Economics.setImpact('medium')" id="imp-medium" class="impact-btn flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-orange-400 inline-block"></span> Moyen</button>
+                <button onclick="Economics.setImpact('low')"    id="imp-low"    class="impact-btn flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span> Faible</button>
               </div>
             </div>
             <div class="ml-auto self-end">
               <button onclick="Economics.reload()" class="btn-secondary text-sm flex items-center gap-2">
-                <span id="reloadIcon">🔄</span> Actualiser
+                <span id="reloadIcon">${Icons.refresh}</span> Actualiser
               </button>
             </div>
           </div>
@@ -392,7 +392,7 @@ const Economics = (() => {
     if (!data) {
       document.getElementById('ecoList').innerHTML = `
         <div class="stat-card text-center py-10">
-          <p class="text-3xl mb-3">🌐</p>
+          <p class="mb-3 flex justify-center" style="color:var(--text-faint)">${Icons.globe}</p>
           <p class="font-medium mb-2" style="color:var(--text-primary)">Impossible de charger les annonces</p>
           <p class="text-sm mb-3" style="color:var(--text-faint)">
             Les données se mettent à jour automatiquement chaque lundi matin.<br>
@@ -460,7 +460,7 @@ const Economics = (() => {
     if (!list) return;
 
     if (!events.length) {
-      list.innerHTML = `<div class="stat-card text-center py-10"><p class="text-3xl mb-3">📭</p><p style="color:var(--text-faint)">Aucune annonce pour cette journée.</p></div>`;
+      list.innerHTML = `<div class="stat-card text-center py-10"><p class="mb-3 flex justify-center" style="color:var(--text-faint)">${Icons.inbox}</p><p style="color:var(--text-faint)">Aucune annonce pour cette journée.</p></div>`;
       return;
     }
 
@@ -514,7 +514,7 @@ const Economics = (() => {
             <div class="flex items-center gap-2 mb-0.5">
               <span class="w-2 h-2 rounded-full ${imp.dot} shrink-0"></span>
               <p class="font-semibold text-sm truncate" style="color:var(--text-primary)">${e.title || e.name || 'Événement'}</p>
-              ${hasInfo ? `<span class="text-xs px-2 py-0.5 rounded-full ml-1 cursor-pointer shrink-0" style="background:rgba(99,102,241,0.1);color:var(--brand)" onclick="Economics.toggleDetail('${eventId}')">ℹ️ En savoir plus</span>` : ''}
+              ${hasInfo ? `<span class="text-xs px-2 py-0.5 rounded-full ml-1 cursor-pointer shrink-0" style="background:rgba(99,102,241,0.1);color:var(--brand)" onclick="Economics.toggleDetail('${eventId}')">En savoir plus</span>` : ''}
             </div>
             ${info?.fr ? `<p class="text-xs" style="color:var(--text-faint)">${info.fr}</p>` : `<p class="text-xs ${imp.cls}">${imp.label} impact</p>`}
           </div>
@@ -532,21 +532,21 @@ const Economics = (() => {
         <div id="${eventId}" class="hidden mt-4 pt-4 border-t" style="border-color:var(--border)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p class="form-label mb-1">📖 Description</p>
+              <p class="form-label mb-1">Description</p>
               <p class="text-sm" style="color:var(--text-muted)">${info.desc}</p>
             </div>
             <div>
-              <p class="form-label mb-1">⚡ Impact sur les marchés</p>
+              <p class="form-label mb-1">Impact sur les marchés</p>
               <p class="text-sm" style="color:var(--text-muted)">${info.impact}</p>
             </div>
             <div>
-              <p class="form-label mb-1">📊 Paires / actifs concernés</p>
+              <p class="form-label mb-1">Paires / actifs concernés</p>
               <div class="flex flex-wrap gap-1">
                 ${(info.paires||[]).map(p => `<span class="text-xs px-2 py-0.5 rounded" style="background:var(--bg-input);color:var(--text-muted)">${p}</span>`).join('')}
               </div>
             </div>
             <div>
-              <p class="form-label mb-1">📅 Fréquence</p>
+              <p class="form-label mb-1">Fréquence</p>
               <p class="text-sm" style="color:var(--text-muted)">${info.freq||'—'}</p>
             </div>
           </div>
@@ -568,10 +568,10 @@ const Economics = (() => {
   // ── Spreads ────────────────────────────────────────────────
   function renderSpreads() {
     const sections = [
-      { key:'forex',       label:'💱 Forex — Majeurs & Croisées', unit:'pips'   },
-      { key:'indices',     label:'📈 Indices Boursiers',           unit:'points' },
-      { key:'commodities', label:'🛢️ Matières Premières',          unit:'points' },
-      { key:'crypto',      label:'₿ Cryptomonnaies',               unit:'points' },
+      { key:'forex',       label:'Forex — Majeurs & Croisées', unit:'pips'   },
+      { key:'indices',     label:'Indices Boursiers',           unit:'points' },
+      { key:'commodities', label:'Matières Premières',          unit:'points' },
+      { key:'crypto',      label:'Cryptomonnaies',               unit:'points' },
     ];
     return sections.map(sec => `
       <div class="stat-card overflow-x-auto">
@@ -582,11 +582,11 @@ const Economics = (() => {
         </table>
       </div>`).join('') + `
       <div class="stat-card border-brand/30" style="background:rgba(99,102,241,0.03)">
-        <h4 class="text-sm font-semibold mb-3" style="color:var(--text-primary)">💡 Quand les spreads s'élargissent ?</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color:var(--text-primary)">${Icons.lightbulb} Quand les spreads s'élargissent ?</h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs" style="color:var(--text-faint)">
-          <div class="flex gap-2"><span class="text-red-400 text-lg">⚠️</span><div><b style="color:var(--text-muted)">Avant les news majeures</b><br>Spreads x2 à x5 dans les 5 min avant NFP, CPI, FOMC.</div></div>
-          <div class="flex gap-2"><span class="text-orange-400 text-lg">🌙</span><div><b style="color:var(--text-muted)">Hors sessions actives</b><br>La nuit et hors chevauchements, liquidité faible = spreads larges.</div></div>
-          <div class="flex gap-2"><span class="text-yellow-400 text-lg">📅</span><div><b style="color:var(--text-muted)">Vendredi soir / lundi</b><br>Weekend gap — risque de spread élevé à l'ouverture.</div></div>
+          <div class="flex gap-2"><span class="text-red-400">${Icons.warning}</span><div><b style="color:var(--text-muted)">Avant les news majeures</b><br>Spreads x2 à x5 dans les 5 min avant NFP, CPI, FOMC.</div></div>
+          <div class="flex gap-2"><span class="text-orange-400">${Icons.moon}</span><div><b style="color:var(--text-muted)">Hors sessions actives</b><br>La nuit et hors chevauchements, liquidité faible = spreads larges.</div></div>
+          <div class="flex gap-2"><span class="text-yellow-400">${Icons.calendarIcon}</span><div><b style="color:var(--text-muted)">Vendredi soir / lundi</b><br>Weekend gap — risque de spread élevé à l'ouverture.</div></div>
         </div>
       </div>`;
   }

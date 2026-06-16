@@ -105,10 +105,10 @@ const Assets = (() => {
   ];
 
   const CAT_LABELS = {
-    forex:     '💱 Forex',
-    commodity: '🛢️ Matières Premières',
-    index:     '📈 Indices',
-    crypto:    '₿ Cryptos',
+    forex:     'Forex',
+    commodity: 'Matières Premières',
+    index:     'Indices',
+    crypto:    'Cryptos',
   };
 
   function getAll()    { return CATALOG; }

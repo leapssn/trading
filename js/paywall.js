@@ -19,7 +19,7 @@ const Paywall = (() => {
       </div>
       <div class="content-area flex items-center justify-center" style="min-height:60vh">
         <div class="stat-card max-w-md w-full text-center p-8">
-          <div class="text-4xl mb-3">🔒</div>
+          <div class="mb-3 flex justify-center" style="color:var(--brand)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
           <h3 class="text-lg font-bold mb-2" style="color:var(--text-primary)">Fonctionnalité Premium</h3>
           <p class="text-sm mb-6" style="color:var(--text-faint)">
             Le ${GATED_PAGES[page] || 'contenu'} fait partie de l'abonnement TradingLog Premium.

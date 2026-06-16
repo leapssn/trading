@@ -57,7 +57,7 @@ const Dashboard = (() => {
 
       accountBanner = `
         <div class="rounded-xl border p-4 ${border} ${bg} flex flex-wrap items-center gap-4">
-          <span class="text-2xl">${ddOver||dlOver ? '⛔' : goalHit ? '🏆' : '📋'}</span>
+          <span style="color:${ddOver||dlOver ? '#ef4444' : goalHit ? '#22c55e' : 'var(--text-faint)'}">${ddOver||dlOver ? Icons.ban : goalHit ? Icons.trophy : Icons.clipboard}</span>
           <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
             ${propKpi('Capital', sym+capital.toLocaleString())}
             ${propKpi('Drawdown', ddPct+'% / '+(journal.drawdown||'—')+'%', ddOver?'#ef4444':null)}
@@ -66,7 +66,7 @@ const Dashboard = (() => {
           </div>
           ${ddOver  ? '<span class="text-red-400 font-bold text-xs animate-pulse">DRAWDOWN ATTEINT</span>' : ''}
           ${dlOver  ? '<span class="text-red-400 font-bold text-xs animate-pulse">LIMITE JOUR ATTEINTE</span>' : ''}
-          ${goalHit ? '<span class="text-green-400 font-bold text-xs">OBJECTIF ✓</span>' : ''}
+          ${goalHit ? `<span class="text-green-400 font-bold text-xs flex items-center gap-1">${Icons.checkCircle} OBJECTIF</span>` : ''}
         </div>`;
     } else if (capital) {
       const balance  = (capital + as.total).toFixed(2);
@@ -138,16 +138,16 @@ const Dashboard = (() => {
 
         <!-- KPIs compte actif -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          ${kpi('P&L Total',      (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'pnl-pos':'pnl-neg', '💰')}
-          ${kpi('Win Rate',       as.winRate.toFixed(1)+'%', '', '🎯')}
-          ${kpi('Trades',         as.count, '', '📊')}
-          ${kpi('Gain moyen',     '+'+sym+as.avgWin.toFixed(2), 'pnl-pos', '⬆️')}
+          ${kpi('P&L Total',      (as.total>=0?'+':'-')+sym+Math.abs(as.total).toFixed(2), as.total>=0?'pnl-pos':'pnl-neg', Icons.dollar)}
+          ${kpi('Win Rate',       as.winRate.toFixed(1)+'%', '', Icons.target)}
+          ${kpi('Trades',         as.count, '', Icons.barChart)}
+          ${kpi('Gain moyen',     '+'+sym+as.avgWin.toFixed(2), 'pnl-pos', Icons.trendUp)}
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          ${kpi('Profit Factor',  as.profitFactor === Infinity ? '∞' : as.profitFactor.toFixed(2), as.profitFactor >= 1.5 ? 'pnl-pos' : as.profitFactor >= 1 ? '' : 'pnl-neg', '⚖️')}
-          ${kpi('R:R moyen',      as.avgRR != null ? '1:'+as.avgRR : '—', as.avgRR != null && as.avgRR >= 1 ? 'pnl-pos' : '', '📐')}
-          ${kpi('Drawdown max',   as.maxDrawdown.toFixed(1)+'%', 'pnl-neg', '📉')}
-          ${kpi('Série',          as.streak === 0 ? '—' : (as.streak > 0 ? '+'+as.streak+' wins' : as.streak+' losses'), as.streak > 0 ? 'pnl-pos' : as.streak < 0 ? 'pnl-neg' : '', '🔥')}
+          ${kpi('Profit Factor',  as.profitFactor === Infinity ? '∞' : as.profitFactor.toFixed(2), as.profitFactor >= 1.5 ? 'pnl-pos' : as.profitFactor >= 1 ? '' : 'pnl-neg', Icons.scale)}
+          ${kpi('R:R moyen',      as.avgRR != null ? '1:'+as.avgRR : '—', as.avgRR != null && as.avgRR >= 1 ? 'pnl-pos' : '', Icons.ruler)}
+          ${kpi('Drawdown max',   as.maxDrawdown.toFixed(1)+'%', 'pnl-neg', Icons.trendDown)}
+          ${kpi('Série',          as.streak === 0 ? '—' : (as.streak > 0 ? '+'+as.streak+' wins' : as.streak+' losses'), as.streak > 0 ? 'pnl-pos' : as.streak < 0 ? 'pnl-neg' : '', Icons.flame)}
         </div>
 
         <!-- Graphes compte actif -->
@@ -189,10 +189,10 @@ const Dashboard = (() => {
 
           <!-- KPIs globaux -->
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            ${kpi('P&L Total',  (gs.total>=0?'+':'')+'$'+gs.total.toFixed(2), gs.total>=0?'pnl-pos':'pnl-neg', '🌐')}
-            ${kpi('Win Rate',   gs.winRate.toFixed(1)+'%', '', '🎯')}
-            ${kpi('Trades',     gs.count, '', '📊')}
-            ${kpi('Gain moyen', '+$'+gs.avgWin.toFixed(2), 'pnl-pos', '⬆️')}
+            ${kpi('P&L Total',  (gs.total>=0?'+':'')+'$'+gs.total.toFixed(2), gs.total>=0?'pnl-pos':'pnl-neg', Icons.globe)}
+            ${kpi('Win Rate',   gs.winRate.toFixed(1)+'%', '', Icons.target)}
+            ${kpi('Trades',     gs.count, '', Icons.barChart)}
+            ${kpi('Gain moyen', '+$'+gs.avgWin.toFixed(2), 'pnl-pos', Icons.trendUp)}
           </div>
 
           <!-- Graphe global + cartes journaux -->
@@ -231,7 +231,7 @@ const Dashboard = (() => {
   // ── Helpers UI ────────────────────────────────────────────
   function kpi(label, value, cls, icon) {
     return `<div class="stat-card flex items-center gap-4">
-      <span class="text-3xl">${icon}</span>
+      <span style="color:var(--brand)">${icon}</span>
       <div>
         <div class="form-label">${label}</div>
         <div class="text-2xl font-bold ${cls}" style="${!cls?'color:var(--text-primary)':''}">${value}</div>

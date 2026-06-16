@@ -83,9 +83,9 @@ const Notebook = (() => {
           <input type="color" id="fontColorPicker" class="w-6 h-6 rounded cursor-pointer border-0 p-0" style="background:none"
             onchange="Notebook.applyColor(this.value)" title="Couleur du texte" value="#6366f1" />
           <div class="ml-auto flex items-center gap-2">
-            <span id="saveStatus" class="text-xs" style="color:var(--text-faint)">✓</span>
+            <span id="saveStatus" class="text-xs" style="color:var(--text-faint)">${Icons.checkCircle}</span>
             <button onclick="Notebook.deletePage('${_activeId}')" title="Supprimer cette page"
-              class="text-xs px-2 py-1 rounded hover:text-red-400 transition" style="color:var(--text-faint)">🗑️ Supprimer</button>
+              class="text-xs px-2 py-1 rounded hover:text-red-400 transition flex items-center gap-1" style="color:var(--text-faint)">${Icons.trash} Supprimer</button>
           </div>
         </div>
 
@@ -131,10 +131,10 @@ const Notebook = (() => {
         class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-sm shrink-0 group transition"
         style="${active ? 'background:var(--bg-hover);color:var(--text-primary)' : 'color:var(--text-faint)'}"
         onclick="Notebook.switchPage('${page.id}')">
-        <span>📄</span>
+        <span>${Icons.file}</span>
         <span id="tabLabel_${page.id}" class="max-w-[120px] truncate">${escHtml(page.title)}</span>
         <button onclick="event.stopPropagation();Notebook.startRename('${page.id}')"
-          class="opacity-0 group-hover:opacity-100 transition text-xs ml-0.5 hover:text-white" title="Renommer">✏️</button>
+          class="opacity-0 group-hover:opacity-100 transition text-xs ml-0.5 hover:text-white" title="Renommer">${Icons.pencil}</button>
       </div>`;
   }
 
@@ -178,7 +178,7 @@ const Notebook = (() => {
       const ed = document.getElementById('editor');
       if (ed && _activeId) {
         await saveContent(_activeId, ed.innerHTML);
-        if (status) status.textContent = '✓ Sauvegardé';
+        if (status) status.innerHTML = `${Icons.checkCircle} Sauvegardé`;
       }
     }, 600);
   }

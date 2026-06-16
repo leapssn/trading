@@ -4,8 +4,8 @@
 const JournalPage = (() => {
 
   const EMOTIONS = {
-    calm:'😌 Calme', fear:'😰 Peur', greed:'🤑 Cupidité',
-    revenge:'😤 Revenge', fomo:'😱 FOMO', disciplined:'💪 Discipliné', bored:'😑 Ennui',
+    calm:'Calme', fear:'Peur', greed:'Cupidité',
+    revenge:'Revenge', fomo:'FOMO', disciplined:'Discipliné', bored:'Ennui',
   };
   const GRADE_COLORS = { A: '#22c55e', B: '#6366f1', C: '#f59e0b' };
 
@@ -59,11 +59,11 @@ const JournalPage = (() => {
       banner = `
         <div class="mb-5 p-4 rounded-xl border ${borderCls}">
           <div class="flex items-center gap-3 mb-3">
-            <span class="text-2xl">${ddOver || dailyOver ? '⛔' : goalHit ? '🏆' : '📋'}</span>
+            <span style="color:${ddOver || dailyOver ? '#ef4444' : goalHit ? '#22c55e' : 'var(--text-faint)'}">${ddOver || dailyOver ? Icons.ban : goalHit ? Icons.trophy : Icons.clipboard}</span>
             <span class="font-semibold" style="color:var(--text-primary)">Suivi Prop Firm</span>
             ${ddOver    ? '<span class="ml-auto text-red-400 font-bold text-sm animate-pulse">DRAWDOWN TOTAL ATTEINT</span>'  : ''}
             ${dailyOver ? '<span class="ml-auto text-red-400 font-bold text-sm animate-pulse">PERTE JOURNALIÈRE ATTEINTE</span>' : ''}
-            ${goalHit   ? '<span class="ml-auto text-green-400 font-bold text-sm">OBJECTIF ATTEINT 🎉</span>'  : ''}
+            ${goalHit   ? '<span class="ml-auto text-green-400 font-bold text-sm">OBJECTIF ATTEINT</span>'  : ''}
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             ${propKpi('Capital', sym+capital.toLocaleString(), 'var(--text-primary)')}
@@ -118,15 +118,15 @@ const JournalPage = (() => {
           <td style="color:var(--text-faint);font-size:0.8rem">${EMOTIONS[t.emotion] || '—'}</td>
           <td>${imgBtn}</td>
           <td>
-            <button onclick="Trades.openEdit('${t.id}')" class="hover:text-white text-xs mr-2" style="color:var(--text-faint)">✏️</button>
-            <button onclick="Trades.remove('${t.id}')" class="hover:text-red-400 text-xs" style="color:var(--text-faint)">🗑️</button>
+            <button onclick="Trades.openEdit('${t.id}')" class="hover:text-white text-xs mr-2" style="color:var(--text-faint)">${Icons.pencil}</button>
+            <button onclick="Trades.remove('${t.id}')" class="hover:text-red-400 text-xs" style="color:var(--text-faint)">${Icons.trash}</button>
           </td>
         </tr>`;
     }).join('');
 
     const emptyState = `
       <tr><td colspan="10" class="text-center py-14">
-        <div class="text-4xl mb-2">📭</div>
+        <div class="mb-2 flex justify-center" style="color:var(--text-faint)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="m5.4 5 2.7-3h7.8l2.7 3L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6Z"/></svg></div>
         <p style="color:var(--text-faint)">Aucun trade dans ce journal.</p>
         <button onclick="Trades.openNew()" class="btn-primary mt-4 text-sm">Ajouter un trade</button>
       </td></tr>`;
@@ -160,7 +160,7 @@ const JournalPage = (() => {
           <input id="tradeMonthFilter" type="month"
             class="form-input text-sm" value="${_month}"
             onchange="JournalPage.setMonth(this.value)" />
-          ${(_search || _month) ? `<button onclick="JournalPage.clearFilters()" class="btn-secondary text-xs px-3 py-2">✕ Effacer</button>` : ''}
+          ${(_search || _month) ? `<button onclick="JournalPage.clearFilters()" class="btn-secondary text-xs px-3 py-2">Effacer</button>` : ''}
           <span class="text-xs ml-auto" style="color:var(--text-faint)">${sorted.length} / ${trades.length} trades</span>
         </div>
 

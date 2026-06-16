@@ -125,7 +125,7 @@ const MarketCalendar = (() => {
     const tokyoOpen  = isOpen(SESSIONS[0], hourUTC);
     const overlapBanner = (londonOpen && nyOpen)
       ? `<div class="mb-6 p-4 rounded-xl border border-brand bg-brand/10 flex items-center gap-3">
-           <span class="text-2xl">⚡</span>
+           <span style="color:var(--brand)">${Icons.flame}</span>
            <div>
              <p class="font-semibold text-white">Chevauchement Londres / New York actif</p>
              <p class="text-sm text-slate-400">Période de plus forte volatilité — idéale pour trader EUR/USD, GBP/USD</p>
@@ -133,7 +133,7 @@ const MarketCalendar = (() => {
          </div>`
       : (tokyoOpen && londonOpen)
       ? `<div class="mb-6 p-4 rounded-xl border border-yellow-500/40 bg-yellow-500/5 flex items-center gap-3">
-           <span class="text-2xl">🌅</span>
+           <span style="color:#eab308">${Icons.sun}</span>
            <div>
              <p class="font-semibold text-white">Chevauchement Tokyo / Londres actif</p>
              <p class="text-sm text-slate-400">Volatilité modérée sur EUR/JPY, GBP/JPY</p>
