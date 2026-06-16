@@ -170,14 +170,14 @@
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span>🏠</span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></a>
-        <a href="#journal"    class="nav-link" data-page="journal">    <span>📒</span> Journal      <span class="nav-lock" data-lock="journal"></span></a>
-        <a href="#analytics"  class="nav-link" data-page="analytics">  <span>📈</span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></a>
-        <a href="#calculator" class="nav-link" data-page="calculator"> <span>🧮</span> Calculateur  </a>
-        <a href="#markets"    class="nav-link" data-page="markets">    <span>🌐</span> Marchés      </a>
-        <a href="#strategies" class="nav-link" data-page="strategies"> <span>🧠</span> Stratégies   </a>
-        <a href="#calendar"   class="nav-link" data-page="calendar">   <span>🕐</span> Sessions     </a>
-        <a href="#economics"  class="nav-link" data-page="economics">  <span>📰</span> Économie     </a>
+        <a href="#dashboard"  class="nav-link" data-page="dashboard">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/></svg></span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></a>
+        <a href="#journal"    class="nav-link" data-page="journal">    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v15a1 1 0 0 1-1.45.9L14 19l-3.55 1.9A1 1 0 0 1 9 20V5"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/></svg></span> Journal      <span class="nav-lock" data-lock="journal"></span></a>
+        <a href="#analytics"  class="nav-link" data-page="analytics">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M11 20V4"/><path d="M18 20v-7"/></svg></span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></a>
+        <a href="#calculator" class="nav-link" data-page="calculator"> <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6"/><path d="M8 12h1M11.5 12h1M15 12h1M8 16h1M11.5 16h1M15 16h1"/></svg></span> Calculateur  </a>
+        <a href="#markets"    class="nav-link" data-page="markets">    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9s1.3-6.5 3.8-9Z"/></svg></span> Marchés      </a>
+        <a href="#strategies" class="nav-link" data-page="strategies"> <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5.8 1 .9 1.5h6.2c.1-.5.4-1 .9-1.5A6 6 0 0 0 12 3Z"/></svg></span> Stratégies   </a>
+        <a href="#calendar"   class="nav-link" data-page="calendar">   <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg></span> Sessions     </a>
+        <a href="#economics"  class="nav-link" data-page="economics">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg></span> Économie     </a>
       </nav>
 
       <div class="px-4 py-3 border-t sidebar-border flex items-center justify-between">
@@ -257,14 +257,14 @@
       </div>
       <!-- Nav links -->
       <nav class="px-3 py-3 space-y-1 flex-1">
-        <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span>🏠</span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></button>
-        <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span>📒</span> Journal      <span class="nav-lock" data-lock="journal"></span></button>
-        <button onclick="App.navigate('analytics');App.closeDrawer()"   class="drawer-nav-btn" data-page="analytics">  <span>📈</span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></button>
-        <button onclick="App.navigate('calculator');App.closeDrawer()"  class="drawer-nav-btn" data-page="calculator"> <span>🧮</span> Calculateur  </button>
-        <button onclick="App.navigate('markets');App.closeDrawer()"     class="drawer-nav-btn" data-page="markets">    <span>🌐</span> Marchés      </button>
-        <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span>🧠</span> Stratégies   </button>
-        <button onclick="App.navigate('calendar');App.closeDrawer()"    class="drawer-nav-btn" data-page="calendar">   <span>🕐</span> Sessions     </button>
-        <button onclick="App.navigate('economics');App.closeDrawer()"   class="drawer-nav-btn" data-page="economics">  <span>📰</span> Économie     </button>
+        <button onclick="App.navigate('dashboard');App.closeDrawer()"   class="drawer-nav-btn" data-page="dashboard">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/></svg></span> Dashboard    <span class="nav-lock" data-lock="dashboard"></span></button>
+        <button onclick="App.navigate('journal');App.closeDrawer()"     class="drawer-nav-btn" data-page="journal">    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v15a1 1 0 0 1-1.45.9L14 19l-3.55 1.9A1 1 0 0 1 9 20V5"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/></svg></span> Journal      <span class="nav-lock" data-lock="journal"></span></button>
+        <button onclick="App.navigate('analytics');App.closeDrawer()"   class="drawer-nav-btn" data-page="analytics">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M11 20V4"/><path d="M18 20v-7"/></svg></span> Analytiques  <span class="nav-lock" data-lock="analytics"></span></button>
+        <button onclick="App.navigate('calculator');App.closeDrawer()"  class="drawer-nav-btn" data-page="calculator"> <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6"/><path d="M8 12h1M11.5 12h1M15 12h1M8 16h1M11.5 16h1M15 16h1"/></svg></span> Calculateur  </button>
+        <button onclick="App.navigate('markets');App.closeDrawer()"     class="drawer-nav-btn" data-page="markets">    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9s1.3-6.5 3.8-9Z"/></svg></span> Marchés      </button>
+        <button onclick="App.navigate('strategies');App.closeDrawer()"  class="drawer-nav-btn" data-page="strategies"> <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.5.5.8 1 .9 1.5h6.2c.1-.5.4-1 .9-1.5A6 6 0 0 0 12 3Z"/></svg></span> Stratégies   </button>
+        <button onclick="App.navigate('calendar');App.closeDrawer()"    class="drawer-nav-btn" data-page="calendar">   <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg></span> Sessions     </button>
+        <button onclick="App.navigate('economics');App.closeDrawer()"   class="drawer-nav-btn" data-page="economics">  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg></span> Économie     </button>
       </nav>
     </div>
   </div>
@@ -451,24 +451,24 @@
   </div>
 
   <!-- Scripts — v5 (cache bust) -->
-  <script src="js/firebase-config.js?v=11"></script>
-  <script src="js/store.js?v=11"></script>
-  <script src="js/assets.js?v=11"></script>
-  <script src="js/theme.js?v=11"></script>
-  <script src="js/auth.js?v=11"></script>
-  <script src="js/journals.js?v=11"></script>
-  <script src="js/trades.js?v=11"></script>
-  <script src="js/dashboard.js?v=11"></script>
-  <script src="js/journal-page.js?v=11"></script>
-  <script src="js/analytics.js?v=11"></script>
-  <script src="js/calculator.js?v=11"></script>
-  <script src="js/markets.js?v=11"></script>
-  <script src="js/strategies.js?v=11"></script>
-  <script src="js/calendar.js?v=11"></script>
-  <script src="js/economics.js?v=11"></script>
-  <script src="js/notebook.js?v=11"></script>
-  <script src="js/paywall.js?v=11"></script>
-  <script src="js/app.js?v=11"></script>
+  <script src="js/firebase-config.js?v=12"></script>
+  <script src="js/store.js?v=12"></script>
+  <script src="js/assets.js?v=12"></script>
+  <script src="js/theme.js?v=12"></script>
+  <script src="js/auth.js?v=12"></script>
+  <script src="js/journals.js?v=12"></script>
+  <script src="js/trades.js?v=12"></script>
+  <script src="js/dashboard.js?v=12"></script>
+  <script src="js/journal-page.js?v=12"></script>
+  <script src="js/analytics.js?v=12"></script>
+  <script src="js/calculator.js?v=12"></script>
+  <script src="js/markets.js?v=12"></script>
+  <script src="js/strategies.js?v=12"></script>
+  <script src="js/calendar.js?v=12"></script>
+  <script src="js/economics.js?v=12"></script>
+  <script src="js/notebook.js?v=12"></script>
+  <script src="js/paywall.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
