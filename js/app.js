@@ -12,6 +12,7 @@ const App = (() => {
     economics:  { render: c => Economics.render(c)      },
     analytics:  { render: c => Analytics.render(c)      },
     calculator: { render: c => Calculator.render(c)     },
+    markets:    { render: c => Markets.render(c)        },
   };
 
   function init() {
