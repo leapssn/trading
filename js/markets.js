@@ -38,7 +38,7 @@ const Markets = (() => {
           </select>
         </div>
         <div class="stat-card p-0 overflow-hidden">
-          <div id="marketsChart" style="height:600px"></div>
+          <div id="marketsChart" style="height:680px"></div>
         </div>
         <p class="text-xs" style="color:var(--text-faint)">Données et graphiques fournis par TradingView.</p>
       </div>`;
@@ -69,8 +69,12 @@ const Markets = (() => {
       style: '1',
       locale: 'fr',
       hide_top_toolbar: false,
+      hide_side_toolbar: false,
       hide_legend: false,
+      withdateranges: true,
       allow_symbol_change: true,
+      details: false,
+      calendar: false,
       support_host: 'https://www.tradingview.com',
     });
     el.appendChild(script);
