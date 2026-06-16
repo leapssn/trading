@@ -2,6 +2,10 @@
 // paywall.js — Écran d'abonnement pour les pages premium
 // ============================================================
 const Paywall = (() => {
+  // Mise en pause temporaire de la gating tant que le cadre légal
+  // (CGV/CGU, facturation) n'est pas finalisé : tout est accessible.
+  const ENABLED = false;
+
   const GATED_PAGES = {
     dashboard: 'Dashboard',
     analytics: 'Analytiques',
@@ -9,7 +13,7 @@ const Paywall = (() => {
   };
 
   function isGated(page) {
-    return !!GATED_PAGES[page];
+    return ENABLED && !!GATED_PAGES[page];
   }
 
   function render(container, page) {
