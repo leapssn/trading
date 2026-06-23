@@ -13,6 +13,7 @@ const App = (() => {
     analytics:  { render: c => Analytics.render(c)      },
     calculator: { render: c => Calculator.render(c)     },
     markets:    { render: c => Markets.render(c)        },
+    signals:    { render: c => Signals.render(c)        },
     profile:    { render: c => Profile.render(c)        },
   };
 

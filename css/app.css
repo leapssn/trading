@@ -208,6 +208,21 @@
 .impact-btn:hover         { color: var(--text-primary); border-color: var(--brand); }
 .impact-btn.impact-active { background: var(--brand); border-color: var(--brand); color: #fff; }
 
+/* ── Signals timeframe filter ────────────────────────────── */
+.tf-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tf-btn:hover    { color: var(--text-primary); border-color: var(--brand); }
+.tf-btn.tf-active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
 /* ── Strategy cards ──────────────────────────────────────── */
 .strat-card {
   background: var(--bg-card);
