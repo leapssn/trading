@@ -8,7 +8,7 @@ const Signals = (() => {
   const KEY_STORE     = 'tl_td_apikey';
   const SYM_STORE     = 'tl_signals_symbols';
   const BASE          = 'https://api.twelvedata.com';
-  const CANDLES       = 150;
+  const CANDLES       = 250; // 200 nécessaires pour EMA200 + marge
   const SCAN_INTERVAL = 15 * 60 * 1000; // auto-scan toutes les 15 min
 
   // Correspondance ticker app → format TwelveData
@@ -423,8 +423,9 @@ const Signals = (() => {
     if (!Array.isArray(data.values) || !data.values.length) return null;
     // TwelveData : plus récent en premier → inverser
     return data.values.reverse().map(v => ({
-      t:     new Date(v.datetime).getTime(),
-      open:  +v.open, high: +v.high, low: +v.low, close: +v.close,
+      t:      new Date(v.datetime).getTime(),
+      open:   +v.open, high: +v.high, low: +v.low, close: +v.close,
+      volume: +(v.volume || 0),
     }));
   }
 
@@ -460,8 +461,7 @@ const Signals = (() => {
     const mac = ef.map((v, i) => (v != null && es[i] != null) ? v - es[i] : null);
     const validMac = mac.filter(v => v != null);
     const sigLine  = calcEMA(validMac, sig);
-    // Aligner sur closes
-    const offset = closes.length - validMac.length;
+    const offset    = closes.length - validMac.length;
     const sigOffset = validMac.length - sigLine.length;
     return {
       macd:   mac,
@@ -486,73 +486,200 @@ const Signals = (() => {
       val = (val * (period - 1) + trs[i]) / period;
       out.push(val);
     }
-    return out; // aligné sur candles.slice(1)
+    return out;
   }
 
-  // ── DÉTECTION DE SIGNAL ───────────────────────────────────
+  function calcStoch(candles, kPeriod = 14, dPeriod = 3) {
+    const rawK = [];
+    for (let i = kPeriod - 1; i < candles.length; i++) {
+      const slice = candles.slice(i - kPeriod + 1, i + 1);
+      const lo = Math.min(...slice.map(c => c.low));
+      const hi = Math.max(...slice.map(c => c.high));
+      rawK.push(hi === lo ? 50 : (candles[i].close - lo) / (hi - lo) * 100);
+    }
+    // %K = SMA3 du raw K
+    const kLine = [];
+    for (let i = dPeriod - 1; i < rawK.length; i++) {
+      kLine.push(rawK.slice(i - dPeriod + 1, i + 1).reduce((a, b) => a + b, 0) / dPeriod);
+    }
+    // %D = SMA3 du %K
+    const dLine = [];
+    for (let i = dPeriod - 1; i < kLine.length; i++) {
+      dLine.push(kLine.slice(i - dPeriod + 1, i + 1).reduce((a, b) => a + b, 0) / dPeriod);
+    }
+    return { k: kLine, d: dLine };
+  }
+
+  function calcBB(closes, period = 20, mult = 2) {
+    const upper = [], lower = [], mid = [];
+    for (let i = period - 1; i < closes.length; i++) {
+      const slice = closes.slice(i - period + 1, i + 1);
+      const mean  = slice.reduce((a, b) => a + b, 0) / period;
+      const std   = Math.sqrt(slice.reduce((a, b) => a + (b - mean) ** 2, 0) / period);
+      mid.push(mean);
+      upper.push(mean + mult * std);
+      lower.push(mean - mult * std);
+    }
+    return { upper, lower, mid };
+  }
+
+  function calcADX(candles, period = 14) {
+    if (candles.length < period * 2 + 1) return null;
+    const trArr = [], pDM = [], mDM = [];
+    for (let i = 1; i < candles.length; i++) {
+      const c = candles[i], p = candles[i - 1];
+      trArr.push(Math.max(c.high - c.low, Math.abs(c.high - p.close), Math.abs(c.low - p.close)));
+      const up = c.high - p.high, down = p.low - c.low;
+      pDM.push(up > down && up > 0 ? up : 0);
+      mDM.push(down > up && down > 0 ? down : 0);
+    }
+    // Wilder smoothing
+    const wilder = (arr, p) => {
+      let v = arr.slice(0, p).reduce((a, b) => a + b, 0);
+      const out = [v];
+      for (let i = p; i < arr.length; i++) { v = v - v / p + arr[i]; out.push(v); }
+      return out;
+    };
+    const sTR = wilder(trArr, period);
+    const sPDM = wilder(pDM, period);
+    const sMDM = wilder(mDM, period);
+    const pDI = sPDM.map((v, i) => sTR[i] ? v / sTR[i] * 100 : 0);
+    const mDI = sMDM.map((v, i) => sTR[i] ? v / sTR[i] * 100 : 0);
+    const dx  = pDI.map((v, i) => (v + mDI[i]) ? Math.abs(v - mDI[i]) / (v + mDI[i]) * 100 : 0);
+    let adxVal = dx.slice(0, period).reduce((a, b) => a + b, 0) / period;
+    for (let i = period; i < dx.length; i++) adxVal = (adxVal * (period - 1) + dx[i]) / period;
+    return { adx: adxVal, pdi: pDI[pDI.length - 1], mdi: mDI[mDI.length - 1] };
+  }
+
+  // ── DÉTECTION DE SIGNAL (13 conditions possibles) ─────────
   function detectSignal(appSym, tf, candles) {
     const closes = candles.map(c => c.close);
     const n      = closes.length;
 
-    const ema20a = calcEMA(closes, 20);
-    const ema50a = calcEMA(closes, 50);
-    const rsiA   = calcRSI(closes, 14);
-    const macdO  = calcMACD(closes);
-    const atrA   = calcATR(candles, 14);
+    const ema20a  = calcEMA(closes, 20);
+    const ema50a  = calcEMA(closes, 50);
+    const ema200a = calcEMA(closes, 200);
+    const rsiA    = calcRSI(closes, 14);
+    const macdO   = calcMACD(closes);
+    const atrA    = calcATR(candles, 14);
+    const stoch   = calcStoch(candles);
+    const bb      = calcBB(closes);
+    const adxR    = calcADX(candles);
 
     const last = (arr) => arr[arr.length - 1];
     const prev = (arr) => arr[arr.length - 2];
 
     const ema20  = last(ema20a);  const ema20p = prev(ema20a);
     const ema50  = last(ema50a);  const ema50p = prev(ema50a);
+    const ema200 = last(ema200a);
     const rsiNow = last(rsiA);    const rsiPrv = prev(rsiA);
     const macdN  = last(macdO.macd);   const macdP = prev(macdO.macd);
     const sigN   = last(macdO.signal); const sigP  = prev(macdO.signal);
     const atrNow = last(atrA);
+    const kNow   = last(stoch.k);  const kPrv  = prev(stoch.k);
+    const dNow   = last(stoch.d);  const dPrv  = prev(stoch.d);
+    const bbUpper = last(bb.upper);
+    const bbLower = last(bb.lower);
 
-    if (!ema20 || !ema50 || !rsiNow || !macdN || !sigN || !atrNow) return null;
+    if (!ema20 || !ema50 || !ema200 || !rsiNow || !macdN || !sigN
+        || !atrNow || kNow == null || dNow == null || !bbUpper) return null;
 
     const price      = closes[n - 1];
     const lastCandle = candles[n - 1];
+    const prevCandle = candles[n - 2];
 
-    // ── Conditions LONG ───────────────────────────────────
+    // Volume spike : bougie courante > 1.3× moyenne 20 bougies
+    const vols   = candles.slice(-21, -1).map(c => c.volume || 0);
+    const avgVol = vols.reduce((a, b) => a + b, 0) / vols.length;
+    const volSpike = avgVol > 0 && (lastCandle.volume || 0) > avgVol * 1.3;
+
+    // Patterns de bougies
+    const body       = Math.abs(lastCandle.close - lastCandle.open);
+    const upperWick  = lastCandle.high  - Math.max(lastCandle.open, lastCandle.close);
+    const lowerWick  = Math.min(lastCandle.open, lastCandle.close) - lastCandle.low;
+    const isHammer   = body > 0 && lowerWick > body * 2 && upperWick < body * 0.5;
+    const isStar     = body > 0 && upperWick > body * 2 && lowerWick < body * 0.5;
+    const isBullEng  = prevCandle
+      && lastCandle.close > lastCandle.open
+      && lastCandle.open  < prevCandle.close
+      && lastCandle.close > prevCandle.open;
+    const isBearEng  = prevCandle
+      && lastCandle.close < lastCandle.open
+      && lastCandle.open  > prevCandle.close
+      && lastCandle.close < prevCandle.open;
+
+    // Croisements MACD
+    const macdBull = macdN > sigN && macdP <= sigP;
+    const macdBear = macdN < sigN && macdP >= sigP;
+
+    // Croisements Stochastique (en zone oversold/overbought)
+    const stochBull = kNow > dNow && kPrv <= dPrv && kNow < 45;
+    const stochBear = kNow < dNow && kPrv >= dPrv && kNow > 55;
+
+    // ── Conditions LONG (13 max) ──────────────────────────
     const lc = [];
-    if (ema20 > ema50)                          lc.push('Tendance haussière (EMA20>50)');
-    if (price > ema20)                          lc.push('Prix au-dessus EMA20');
-    if (ema20 > ema20p && ema50 > ema50p)       lc.push('EMAs en expansion haussière');
-    if (rsiNow > 45 && rsiNow < 65)             lc.push('RSI en zone momentum (45-65)');
-    if (rsiPrv !== null && rsiPrv <= 30 && rsiNow > 30) lc.push('RSI : sortie de survente');
-    if (macdN !== null && sigN !== null && macdP !== null && sigP !== null
-        && macdN > sigN && macdP <= sigP)       lc.push('MACD : croisement haussier');
-    if (lastCandle.close > lastCandle.open)     lc.push('Bougie de clôture haussière');
+    if (ema20 > ema50)                                   lc.push('EMA20 > EMA50 (tendance haussière)');
+    if (price > ema200)                                  lc.push('Prix au-dessus EMA200');
+    if (price > ema20)                                   lc.push('Prix au-dessus EMA20');
+    if (ema20 > ema20p && ema50 > ema50p)                lc.push('EMAs en expansion haussière');
+    if (rsiNow > 45 && rsiNow < 65)                     lc.push('RSI en zone momentum (45-65)');
+    if (rsiPrv != null && rsiPrv <= 32 && rsiNow > 32)  lc.push('RSI : sortie de survente');
+    if (macdBull)                                        lc.push('MACD : croisement haussier');
+    if (stochBull)                                       lc.push('Stochastique : croisement haussier');
+    if (price <= bbLower * 1.002)                        lc.push('Prix sur bande Bollinger basse');
+    if (adxR && adxR.adx > 20 && adxR.pdi > adxR.mdi)  lc.push('ADX : force haussière confirmée');
+    if (lastCandle.close > lastCandle.open)              lc.push('Bougie de clôture haussière');
+    if (isHammer || isBullEng)                           lc.push(isHammer ? 'Pattern : Marteau' : 'Pattern : Engloutissant haussier');
+    if (volSpike)                                        lc.push('Volume : pic de confirmation');
 
-    // ── Conditions SHORT ──────────────────────────────────
+    // ── Conditions SHORT (13 max) ─────────────────────────
     const sc = [];
-    if (ema20 < ema50)                          sc.push('Tendance baissière (EMA20<50)');
-    if (price < ema20)                          sc.push('Prix en-dessous EMA20');
-    if (ema20 < ema20p && ema50 < ema50p)       sc.push('EMAs en expansion baissière');
-    if (rsiNow > 35 && rsiNow < 55)             sc.push('RSI en zone momentum (35-55)');
-    if (rsiPrv !== null && rsiPrv >= 70 && rsiNow < 70) sc.push('RSI : sortie de surachat');
-    if (macdN !== null && sigN !== null && macdP !== null && sigP !== null
-        && macdN < sigN && macdP >= sigP)       sc.push('MACD : croisement baissier');
-    if (lastCandle.close < lastCandle.open)     sc.push('Bougie de clôture baissière');
+    if (ema20 < ema50)                                   sc.push('EMA20 < EMA50 (tendance baissière)');
+    if (price < ema200)                                  sc.push('Prix en-dessous EMA200');
+    if (price < ema20)                                   sc.push('Prix en-dessous EMA20');
+    if (ema20 < ema20p && ema50 < ema50p)                sc.push('EMAs en expansion baissière');
+    if (rsiNow > 35 && rsiNow < 55)                     sc.push('RSI en zone momentum (35-55)');
+    if (rsiPrv != null && rsiPrv >= 68 && rsiNow < 68)  sc.push('RSI : sortie de surachat');
+    if (macdBear)                                        sc.push('MACD : croisement baissier');
+    if (stochBear)                                       sc.push('Stochastique : croisement baissier');
+    if (price >= bbUpper * 0.998)                        sc.push('Prix sur bande Bollinger haute');
+    if (adxR && adxR.adx > 20 && adxR.mdi > adxR.pdi)  sc.push('ADX : force baissière confirmée');
+    if (lastCandle.close < lastCandle.open)              sc.push('Bougie de clôture baissière');
+    if (isStar || isBearEng)                             sc.push(isStar ? 'Pattern : Étoile filante' : 'Pattern : Engloutissant baissier');
+    if (volSpike)                                        sc.push('Volume : pic de confirmation');
 
-    // Signal valide : ≥ 4 conditions dont obligatoirement MACD ou RSI extreme
-    const hasLongTrigger  = lc.some(c => c.includes('MACD') || c.includes('survente'));
-    const hasShortTrigger = sc.some(c => c.includes('MACD') || c.includes('surachat'));
+    // Trigger obligatoire : MACD, Stochastique ou RSI extrême
+    const hasLongTrigger  = lc.some(c => c.includes('MACD') || c.includes('survente') || c.includes('Stochastique'));
+    const hasShortTrigger = sc.some(c => c.includes('MACD') || c.includes('surachat') || c.includes('Stochastique'));
 
+    const MIN = 6;
     let direction = null, conditions = [];
-    if (lc.length >= 4 && hasLongTrigger && lc.length >= sc.length) {
+    if (lc.length >= MIN && hasLongTrigger && lc.length >= sc.length) {
       direction = 'LONG';  conditions = lc;
-    } else if (sc.length >= 4 && hasShortTrigger) {
+    } else if (sc.length >= MIN && hasShortTrigger && sc.length > lc.length) {
       direction = 'SHORT'; conditions = sc;
     } else {
       return null;
     }
 
-    // Précision decimale par actif
+    const matchCount = conditions.length;
+    const score = matchCount >= 10 ? 'HIGH' : matchCount >= 8 ? 'MEDIUM' : 'LOW';
+
+    // Nom du setup
+    const hasMacd    = conditions.some(c => c.includes('MACD'));
+    const hasStoch   = conditions.some(c => c.includes('Stochastique'));
+    const hasRSIext  = conditions.some(c => c.includes('survente') || c.includes('surachat'));
+    const hasBB      = conditions.some(c => c.includes('Bollinger'));
+    const hasPattern = conditions.some(c => c.includes('Pattern'));
+    let setup = 'Multi-confluences';
+    if (hasMacd && hasStoch)     setup = 'MACD + Stochastique';
+    else if (hasMacd)             setup = 'MACD Crossover';
+    else if (hasRSIext && hasBB)  setup = 'Rebond RSI + Bollinger';
+    else if (hasPattern)          setup = 'Pattern + EMAs';
+    else if (hasStoch)            setup = 'Stochastique Crossover';
+
     const decimals = /JPY/.test(appSym) ? 3
-      : /BTC|NAS|US5|US3|XAU|XAG/.test(appSym) ? 2
+      : /BTC|NAS|US5|US3|XAU|XAG|OIL/.test(appSym) ? 2
       : 5;
 
     const slDist = atrNow * 1.5;
@@ -562,20 +689,12 @@ const Signals = (() => {
     const tp2 = direction === 'LONG' ? entry + slDist * 2 : entry - slDist * 2;
     const tp3 = direction === 'LONG' ? entry + slDist * 3 : entry - slDist * 3;
 
-    const matchCount = conditions.length;
-    const score = matchCount >= 6 ? 'HIGH' : matchCount >= 5 ? 'MEDIUM' : 'LOW';
-
-    let setup = 'Multi-confluences';
-    if (conditions.some(c => c.includes('MACD')))    setup = 'MACD Crossover';
-    else if (conditions.some(c => c.includes('RSI'))) setup = 'Rebond RSI';
-    else if (conditions.some(c => c.includes('Tendance'))) setup = 'Suivi de tendance EMA';
-
     return {
       id: `${appSym}_${tf}_${Date.now()}`,
       symbol: appSym, tf, direction, setup,
       entry, sl, tp1, tp2, tp3, decimals,
       score, matchCount,
-      conditions: conditions.slice(0, 6),
+      conditions: conditions.slice(0, 8),
       time: Date.now(),
     };
   }
