@@ -1,5 +1,5 @@
 // ============================================================
-// signals.js — Assistant de signaux de trading (30M / H1 / H4)
+// signals.js — Assistant de signaux de trading (15M / 30M / H1)
 // Données : TwelveData REST API (clé gratuite)
 // Indicateurs : EMA(20/50), RSI(14), MACD(12-26-9), ATR(14)
 // ============================================================
@@ -7,6 +7,7 @@ const Signals = (() => {
 
   const KEY_STORE     = 'tl_td_apikey';
   const SYM_STORE     = 'tl_signals_symbols';
+  const HIST_STORE    = 'tl_signals_history';
   const BASE          = 'https://api.twelvedata.com';
   const CANDLES       = 250; // 200 nécessaires pour EMA200 + marge
   const SCAN_INTERVAL = 10 * 60 * 1000; // auto-scan toutes les 10 min
@@ -25,6 +26,7 @@ const Signals = (() => {
   const DEFAULTS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'USDJPY', 'BTCUSD', 'NAS100'];
 
   let _apiKey   = localStorage.getItem(KEY_STORE) || '';
+  let _history  = _loadHistory();
   let _scanning = false;
   let _timer    = null;
   let _signals  = [];
@@ -73,7 +75,7 @@ const Signals = (() => {
           </div>
           <h3 class="text-lg font-bold mb-2 text-center" style="color:var(--text-primary)">Activation des signaux</h3>
           <p class="text-sm mb-6 text-center" style="color:var(--text-faint)">
-            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes H1, H4 et 30M.
+            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes 15M, 30M et H1.
           </p>
           <div class="mb-3">
             <label class="form-label">Clé API TwelveData</label>
@@ -107,6 +109,7 @@ const Signals = (() => {
             <span id="scanIcon" class="${_scanning ? 'animate-spin' : ''}">${Icons.refresh}</span>
             ${_scanning ? 'Analyse…' : 'Scanner'}
           </button>
+          ${_notifBtn()}
           <button onclick="Signals.openSettings()" class="btn-secondary text-sm flex items-center gap-1">${Icons.target} Clé API</button>
         </div>
       </div>
@@ -127,13 +130,16 @@ const Signals = (() => {
         <!-- Filtres -->
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="Signals.setTf(null)"    id="tf-all"   class="tf-btn tf-active">Tous</button>
+          <button onclick="Signals.setTf('15min')" id="tf-15min" class="tf-btn">15M</button>
           <button onclick="Signals.setTf('30min')" id="tf-30min" class="tf-btn">30M</button>
-          <button onclick="Signals.setTf('1h')"  id="tf-1h"  class="tf-btn">H1</button>
-          <button onclick="Signals.setTf('4h')" id="tf-4h" class="tf-btn">H4</button>
+          <button onclick="Signals.setTf('1h')"    id="tf-1h"    class="tf-btn">H1</button>
         </div>
 
         <!-- Liste des signaux -->
         <div id="signalsContainer">${renderSignalsList()}</div>
+
+        <!-- Historique -->
+        ${renderHistory()}
 
         <!-- Footer -->
         <div class="text-right text-xs pt-1" style="color:var(--text-faint)">
@@ -267,7 +273,7 @@ const Signals = (() => {
   // ── FILTRE TIMEFRAME ──────────────────────────────────────
   function setTf(tf) {
     _tfFilter = tf;
-    ['all', '30min', '1h', '4h'].forEach(k => {
+    ['all', '15min', '30min', '1h'].forEach(k => {
       document.getElementById(`tf-${k}`)?.classList.toggle('tf-active',
         (k === 'all' ? null : k) === tf || (k === 'all' && !tf));
     });
@@ -379,7 +385,7 @@ const Signals = (() => {
     const symbols = getWatchSymbols();
     const tasks   = [];
     for (const sym of symbols) {
-      for (const tf of ['30min', '1h', '4h']) tasks.push({ sym, tf });
+      for (const tf of ['15min', '30min', '1h']) tasks.push({ sym, tf });
     }
 
     // Fetch par lots de 4 (respect rate limit)
@@ -398,6 +404,9 @@ const Signals = (() => {
 
     _scanning = false;
     _lastScan = new Date();
+
+    _mergeIntoHistory(_signals);
+    _notify(_signals);
 
     const page = document.getElementById('page-signals');
     if (page && !page.classList.contains('hidden')) {
@@ -700,7 +709,114 @@ const Signals = (() => {
     };
   }
 
+
+  // -- HISTORIQUE ------------------------------------------
+  function _loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch { return []; }
+  }
+
+  function _saveHistory() {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    _history = _history.filter(s => s.time > cutoff).slice(-200);
+    localStorage.setItem(HIST_STORE, JSON.stringify(_history));
+  }
+
+  function _mergeIntoHistory(newSignals) {
+    for (const sig of newSignals) {
+      const isDup = _history.some(h =>
+        h.symbol === sig.symbol && h.tf === sig.tf && h.direction === sig.direction
+        && (sig.time - h.time) < 30 * 60 * 1000
+      );
+      if (!isDup) _history.unshift({ ...sig });
+    }
+    _saveHistory();
+  }
+
+  function _timeAgo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60)    return 'il y a < 1 min';
+    if (diff < 3600)  return `il y a ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
+    return `il y a ${Math.floor(diff / 86400)}j`;
+  }
+
+  function renderHistory() {
+    if (_history.length === 0) return '';
+    const upSvg   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 7-7 4 4 7-7"/><path d="M16 7h5v5"/></svg>';
+    const downSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 7 7 7 4-4 7 7"/><path d="M16 9h5v5"/></svg>';
+    const rows = _history.slice(0, 60).map(s => {
+      const isLong = s.direction === 'LONG';
+      const dc     = isLong ? '#22c55e' : '#ef4444';
+      const sc     = { HIGH: '#22c55e', MEDIUM: '#f59e0b', LOW: '#94a3b8' }[s.score];
+      const tfLbl  = s.tf.replace('min','M').replace('1h','H1').replace('4h','H4');
+      return `<div class="flex items-center gap-3 py-2 border-b last:border-0" style="border-color:var(--border)">
+        <span class="text-xs font-bold w-16 shrink-0" style="color:var(--text-primary)">${s.symbol}</span>
+        <span class="text-xs px-1.5 py-0.5 rounded shrink-0" style="background:var(--bg-hover);color:var(--text-muted)">${tfLbl}</span>
+        <span class="flex items-center gap-1 text-xs font-semibold shrink-0" style="color:${dc}">${isLong ? upSvg : downSvg} ${s.direction}</span>
+        <span class="text-xs font-bold shrink-0" style="color:${sc}">${s.score}</span>
+        <span class="text-xs truncate" style="color:var(--text-faint)">${s.setup}</span>
+        <span class="text-xs ml-auto shrink-0 whitespace-nowrap" style="color:var(--text-faint)">${_timeAgo(s.time)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="stat-card">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold" style="color:var(--text-primary)">
+          Historique
+          <span class="font-normal text-xs ml-1" style="color:var(--text-faint)">(${_history.length} signal${_history.length > 1 ? 's' : ''} · 7 derniers jours)</span>
+        </h3>
+        <button onclick="Signals._clearHistory()" class="text-xs" style="color:var(--text-faint)">Effacer</button>
+      </div>
+      <div>${rows}</div>
+    </div>`;
+  }
+
+  function _clearHistory() {
+    _history = [];
+    localStorage.removeItem(HIST_STORE);
+    const p = document.getElementById('page-signals');
+    if (p) renderMain(p);
+  }
+
+  // -- NOTIFICATIONS ---------------------------------------
+  function _bellSvg() {
+    return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+  }
+
+  function _notify(signals) {
+    if (Notification.permission !== 'granted') return;
+    for (const s of signals) {
+      if (s.score === 'LOW') continue;
+      const tfLbl = s.tf.replace('min','M').replace('1h','H1');
+      new Notification(`${s.score} — ${s.symbol} ${s.direction} (${tfLbl})`, {
+        body: `${s.setup} · ${s.matchCount} confluences · Entrée ${s.entry.toFixed(s.decimals)}`,
+        icon: '/trading/icons/favicon-32.png',
+        tag:  s.id,
+      });
+    }
+  }
+
+  async function requestNotifPermission() {
+    if (!('Notification' in window)) { alert('Ton navigateur ne supporte pas les notifications.'); return; }
+    const perm = await Notification.requestPermission();
+    const p = document.getElementById('page-signals');
+    if (p) renderMain(p);
+    if (perm === 'granted') {
+      new Notification('TradingLog — Notifications activees', {
+        body: 'Tu seras alerte des qu\'un signal MEDIUM ou HIGH est detecte.',
+        icon: '/trading/icons/favicon-32.png',
+      });
+    }
+  }
+
+  function _notifBtn() {
+    if (!('Notification' in window)) return '';
+    const perm = Notification.permission;
+    if (perm === 'granted') return `<span class="text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5" style="background:rgba(34,197,94,0.12);color:#22c55e">${_bellSvg()} Notifications actives</span>`;
+    if (perm === 'denied')  return `<span class="text-xs" style="color:var(--text-faint)">Notifications bloquees dans le navigateur</span>`;
+    return `<button onclick="Signals.requestNotifPermission()" class="btn-secondary text-xs flex items-center gap-1.5">${_bellSvg()} Activer les notifications</button>`;
+  }
+
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  return { render, scan, saveKey, saveKeyFromSettings, openSettings, setTf, toggleSymbol, _resetSymbols };
+  return { render, scan, saveKey, saveKeyFromSettings, openSettings, setTf, toggleSymbol, _resetSymbols, _clearHistory, requestNotifPermission };
 })();
