@@ -1,5 +1,5 @@
 // ============================================================
-// signals.js — Assistant de signaux de trading (H1 / H4)
+// signals.js — Assistant de signaux de trading (30M / H1 / H4)
 // Données : TwelveData REST API (clé gratuite)
 // Indicateurs : EMA(20/50), RSI(14), MACD(12-26-9), ATR(14)
 // ============================================================
@@ -73,7 +73,7 @@ const Signals = (() => {
           </div>
           <h3 class="text-lg font-bold mb-2 text-center" style="color:var(--text-primary)">Activation des signaux</h3>
           <p class="text-sm mb-6 text-center" style="color:var(--text-faint)">
-            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes H1 et H4.
+            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes H1, H4 et 30M.
           </p>
           <div class="mb-3">
             <label class="form-label">Clé API TwelveData</label>
@@ -127,6 +127,7 @@ const Signals = (() => {
         <!-- Filtres -->
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="Signals.setTf(null)"    id="tf-all"   class="tf-btn tf-active">Tous</button>
+          <button onclick="Signals.setTf('30min')" id="tf-30min" class="tf-btn">30M</button>
           <button onclick="Signals.setTf('1h')"  id="tf-1h"  class="tf-btn">H1</button>
           <button onclick="Signals.setTf('4h')" id="tf-4h" class="tf-btn">H4</button>
         </div>
@@ -266,7 +267,7 @@ const Signals = (() => {
   // ── FILTRE TIMEFRAME ──────────────────────────────────────
   function setTf(tf) {
     _tfFilter = tf;
-    ['all', '1h', '4h'].forEach(k => {
+    ['all', '30min', '1h', '4h'].forEach(k => {
       document.getElementById(`tf-${k}`)?.classList.toggle('tf-active',
         (k === 'all' ? null : k) === tf || (k === 'all' && !tf));
     });
@@ -378,7 +379,7 @@ const Signals = (() => {
     const symbols = getWatchSymbols();
     const tasks   = [];
     for (const sym of symbols) {
-      for (const tf of ['1h', '4h']) tasks.push({ sym, tf });
+      for (const tf of ['30min', '1h', '4h']) tasks.push({ sym, tf });
     }
 
     // Fetch par lots de 4 (respect rate limit)
