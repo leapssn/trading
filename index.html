@@ -151,9 +151,9 @@
       </div>
 
       <div class="px-4 py-3 border-b sidebar-border flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm shrink-0" id="userAvatar">?</div>
+        <button onclick="App.navigate('profile')" class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm shrink-0 hover:opacity-80 transition" id="userAvatar" title="Mon profil">?</button>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate" style="color:var(--text-primary)" id="userDisplayName">…</p>
+          <button onclick="App.navigate('profile')" class="text-sm font-semibold truncate block text-left hover:underline" style="color:var(--text-primary)" id="userDisplayName">…</button>
           <button onclick="Auth.logout()" class="text-xs hover:underline" style="color:var(--text-faint)">Se déconnecter</button>
         </div>
       </div>
@@ -218,6 +218,7 @@
         <div id="page-strategies" class="page hidden"></div>
         <div id="page-calendar"   class="page hidden"></div>
         <div id="page-economics"  class="page hidden"></div>
+        <div id="page-profile"    class="page hidden"></div>
       </main>
     </div>
   </div>
@@ -238,9 +239,9 @@
       </div>
       <!-- User -->
       <div class="px-4 py-3 border-b flex items-center gap-3" style="border-color:var(--border)">
-        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-xs shrink-0" id="userAvatarDrawer">?</div>
+        <button onclick="App.navigate('profile');App.closeDrawer()" class="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white font-bold text-xs shrink-0 hover:opacity-80 transition" id="userAvatarDrawer" title="Mon profil">?</button>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-semibold truncate" style="color:var(--text-primary)" id="userDisplayNameDrawer">…</p>
+          <button onclick="App.navigate('profile');App.closeDrawer()" class="text-xs font-semibold truncate block text-left hover:underline" style="color:var(--text-primary)" id="userDisplayNameDrawer">…</button>
           <button onclick="Auth.logout()" class="text-xs hover:underline" style="color:var(--text-faint)">Se déconnecter</button>
         </div>
       </div>
@@ -451,25 +452,26 @@
   </div>
 
   <!-- Scripts — v5 (cache bust) -->
-  <script src="js/icons.js?v=14"></script>
-  <script src="js/firebase-config.js?v=14"></script>
-  <script src="js/store.js?v=14"></script>
-  <script src="js/assets.js?v=14"></script>
-  <script src="js/theme.js?v=14"></script>
-  <script src="js/auth.js?v=14"></script>
-  <script src="js/journals.js?v=14"></script>
-  <script src="js/trades.js?v=14"></script>
-  <script src="js/dashboard.js?v=14"></script>
-  <script src="js/journal-page.js?v=14"></script>
-  <script src="js/analytics.js?v=14"></script>
-  <script src="js/calculator.js?v=14"></script>
-  <script src="js/markets.js?v=14"></script>
-  <script src="js/strategies.js?v=14"></script>
-  <script src="js/calendar.js?v=14"></script>
-  <script src="js/economics.js?v=14"></script>
-  <script src="js/notebook.js?v=14"></script>
-  <script src="js/paywall.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/icons.js?v=15"></script>
+  <script src="js/firebase-config.js?v=15"></script>
+  <script src="js/store.js?v=15"></script>
+  <script src="js/assets.js?v=15"></script>
+  <script src="js/theme.js?v=15"></script>
+  <script src="js/auth.js?v=15"></script>
+  <script src="js/journals.js?v=15"></script>
+  <script src="js/trades.js?v=15"></script>
+  <script src="js/dashboard.js?v=15"></script>
+  <script src="js/journal-page.js?v=15"></script>
+  <script src="js/analytics.js?v=15"></script>
+  <script src="js/calculator.js?v=15"></script>
+  <script src="js/markets.js?v=15"></script>
+  <script src="js/strategies.js?v=15"></script>
+  <script src="js/calendar.js?v=15"></script>
+  <script src="js/economics.js?v=15"></script>
+  <script src="js/notebook.js?v=15"></script>
+  <script src="js/paywall.js?v=15"></script>
+  <script src="js/profile.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
