@@ -32,11 +32,34 @@ const Signals = (() => {
   let _tfFilter = null;
 
   // ── RENDER PRINCIPAL ──────────────────────────────────────
-  function render(container) {
+  async function render(container) {
+    // Charger la clé depuis Firestore si absente du localStorage
+    if (!_apiKey) await _loadKeyFromCloud();
     if (!_apiKey) { renderSetup(container); return; }
     renderMain(container);
     if (!_timer) startAutoScan();
     if (_signals.length === 0 && !_scanning) scan();
+  }
+
+  async function _loadKeyFromCloud() {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+      const doc = await db.collection('users').doc(uid).get();
+      const key = doc.exists && doc.data().tdApiKey;
+      if (key) {
+        _apiKey = key;
+        localStorage.setItem(KEY_STORE, key);
+      }
+    } catch { /* silencieux — réseau ou droits */ }
+  }
+
+  async function _saveKeyToCloud(key) {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+      await db.collection('users').doc(uid).set({ tdApiKey: key }, { merge: true });
+    } catch { /* silencieux */ }
   }
 
   // ── ÉCRAN DE CONFIGURATION ────────────────────────────────
@@ -257,6 +280,7 @@ const Signals = (() => {
     if (!k) return;
     _apiKey = k;
     localStorage.setItem(KEY_STORE, k);
+    _saveKeyToCloud(k);
     App.render('signals');
   }
 
@@ -265,6 +289,7 @@ const Signals = (() => {
     if (!k) return;
     _apiKey = k;
     localStorage.setItem(KEY_STORE, k);
+    _saveKeyToCloud(k);
     App.closeModal('signalsSettingsModal');
   }
 
