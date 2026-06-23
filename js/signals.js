@@ -1,5 +1,5 @@
 // ============================================================
-// signals.js — Assistant de signaux de trading (5M / 15M)
+// signals.js — Assistant de signaux de trading (H1 / H4)
 // Données : TwelveData REST API (clé gratuite)
 // Indicateurs : EMA(20/50), RSI(14), MACD(12-26-9), ATR(14)
 // ============================================================
@@ -9,7 +9,7 @@ const Signals = (() => {
   const SYM_STORE     = 'tl_signals_symbols';
   const BASE          = 'https://api.twelvedata.com';
   const CANDLES       = 250; // 200 nécessaires pour EMA200 + marge
-  const SCAN_INTERVAL = 15 * 60 * 1000; // auto-scan toutes les 15 min
+  const SCAN_INTERVAL = 60 * 60 * 1000; // auto-scan toutes les heures
 
   // Correspondance ticker app → format TwelveData
   const TD_SYM = {
@@ -73,7 +73,7 @@ const Signals = (() => {
           </div>
           <h3 class="text-lg font-bold mb-2 text-center" style="color:var(--text-primary)">Activation des signaux</h3>
           <p class="text-sm mb-6 text-center" style="color:var(--text-faint)">
-            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes 5M et 15M.
+            Entre ta clé API <strong style="color:var(--text-muted)">TwelveData</strong> pour activer l'analyse en temps réel sur les timeframes H1 et H4.
           </p>
           <div class="mb-3">
             <label class="form-label">Clé API TwelveData</label>
@@ -118,7 +118,7 @@ const Signals = (() => {
           ${kpiBox('Symboles', symbols.length, Icons.globe, null)}
           ${kpiBox('Signaux', _signals.length, Icons.flag, null)}
           ${kpiBox('Haute confiance', high, Icons.trophy, high > 0 ? '#22c55e' : null)}
-          ${kpiBox('Prochain scan', 'auto 15min', Icons.calendarIcon, null)}
+          ${kpiBox('Prochain scan', 'auto 1h', Icons.calendarIcon, null)}
         </div>
 
         <!-- Sélecteur de symboles -->
@@ -127,8 +127,8 @@ const Signals = (() => {
         <!-- Filtres -->
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="Signals.setTf(null)"    id="tf-all"   class="tf-btn tf-active">Tous</button>
-          <button onclick="Signals.setTf('5min')"  id="tf-5min"  class="tf-btn">5M</button>
-          <button onclick="Signals.setTf('15min')" id="tf-15min" class="tf-btn">15M</button>
+          <button onclick="Signals.setTf('1h')"  id="tf-1h"  class="tf-btn">H1</button>
+          <button onclick="Signals.setTf('4h')" id="tf-4h" class="tf-btn">H4</button>
         </div>
 
         <!-- Liste des signaux -->
@@ -150,7 +150,7 @@ const Signals = (() => {
               <input id="tdKeyInSettings" type="text" class="form-input w-full" value="${_apiKey}" />
             </div>
             <p class="text-xs" style="color:var(--text-faint)">
-              Plan gratuit TwelveData : 800 appels/jour. Scan auto toutes les 15 min = ~100 appels/jour pour 8 symboles.
+              Plan gratuit TwelveData : 800 appels/jour. Scan auto toutes les heures = ~100 appels/jour pour 8 symboles.
             </p>
           </div>
           <div class="flex gap-3 justify-end mt-5">
@@ -266,7 +266,7 @@ const Signals = (() => {
   // ── FILTRE TIMEFRAME ──────────────────────────────────────
   function setTf(tf) {
     _tfFilter = tf;
-    ['all', '5min', '15min'].forEach(k => {
+    ['all', '1h', '4h'].forEach(k => {
       document.getElementById(`tf-${k}`)?.classList.toggle('tf-active',
         (k === 'all' ? null : k) === tf || (k === 'all' && !tf));
     });
@@ -378,7 +378,7 @@ const Signals = (() => {
     const symbols = getWatchSymbols();
     const tasks   = [];
     for (const sym of symbols) {
-      for (const tf of ['5min', '15min']) tasks.push({ sym, tf });
+      for (const tf of ['1h', '4h']) tasks.push({ sym, tf });
     }
 
     // Fetch par lots de 4 (respect rate limit)
