@@ -9,7 +9,7 @@ const Signals = (() => {
   const SYM_STORE     = 'tl_signals_symbols';
   const BASE          = 'https://api.twelvedata.com';
   const CANDLES       = 250; // 200 nécessaires pour EMA200 + marge
-  const SCAN_INTERVAL = 60 * 60 * 1000; // auto-scan toutes les heures
+  const SCAN_INTERVAL = 10 * 60 * 1000; // auto-scan toutes les 10 min
 
   // Correspondance ticker app → format TwelveData
   const TD_SYM = {
@@ -118,7 +118,7 @@ const Signals = (() => {
           ${kpiBox('Symboles', symbols.length, Icons.globe, null)}
           ${kpiBox('Signaux', _signals.length, Icons.flag, null)}
           ${kpiBox('Haute confiance', high, Icons.trophy, high > 0 ? '#22c55e' : null)}
-          ${kpiBox('Prochain scan', 'auto 1h', Icons.calendarIcon, null)}
+          ${kpiBox('Prochain scan', 'auto 10min', Icons.calendarIcon, null)}
         </div>
 
         <!-- Sélecteur de symboles -->
@@ -150,7 +150,7 @@ const Signals = (() => {
               <input id="tdKeyInSettings" type="text" class="form-input w-full" value="${_apiKey}" />
             </div>
             <p class="text-xs" style="color:var(--text-faint)">
-              Plan gratuit TwelveData : 800 appels/jour. Scan auto toutes les heures = ~100 appels/jour pour 8 symboles.
+              Plan gratuit TwelveData : 800 appels/jour. Scan auto toutes les 10 min = ~100 appels/jour pour 8 symboles.
             </p>
           </div>
           <div class="flex gap-3 justify-end mt-5">
