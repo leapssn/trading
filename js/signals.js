@@ -6,6 +6,7 @@
 const Signals = (() => {
 
   const KEY_STORE     = 'tl_td_apikey';
+  const SYM_STORE     = 'tl_signals_symbols';
   const BASE          = 'https://api.twelvedata.com';
   const CANDLES       = 150;
   const SCAN_INTERVAL = 15 * 60 * 1000; // auto-scan toutes les 15 min
@@ -83,7 +84,7 @@ const Signals = (() => {
             <span id="scanIcon" class="${_scanning ? 'animate-spin' : ''}">${Icons.refresh}</span>
             ${_scanning ? 'Analyse…' : 'Scanner'}
           </button>
-          <button onclick="Signals.openSettings()" class="btn-secondary text-sm flex items-center gap-1">${Icons.target} Config</button>
+          <button onclick="Signals.openSettings()" class="btn-secondary text-sm flex items-center gap-1">${Icons.target} Clé API</button>
         </div>
       </div>
 
@@ -97,14 +98,14 @@ const Signals = (() => {
           ${kpiBox('Prochain scan', 'auto 15min', Icons.calendarIcon, null)}
         </div>
 
+        <!-- Sélecteur de symboles -->
+        ${renderSymbolPicker(symbols)}
+
         <!-- Filtres -->
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="Signals.setTf(null)"    id="tf-all"   class="tf-btn tf-active">Tous</button>
           <button onclick="Signals.setTf('5min')"  id="tf-5min"  class="tf-btn">5M</button>
           <button onclick="Signals.setTf('15min')" id="tf-15min" class="tf-btn">15M</button>
-          <span class="ml-auto text-xs" style="color:var(--text-faint)">
-            ${symbols.slice(0,8).map(s => `<span style="color:var(--brand)">${s}</span>`).join(' · ')}
-          </span>
         </div>
 
         <!-- Liste des signaux -->
@@ -119,16 +120,12 @@ const Signals = (() => {
       <!-- Modal config -->
       <div id="signalsSettingsModal" class="modal-backdrop hidden">
         <div class="modal-box w-[440px]">
-          <h3 class="text-lg font-semibold modal-title mb-4">Configuration des signaux</h3>
+          <h3 class="text-lg font-semibold modal-title mb-4">Clé API TwelveData</h3>
           <div class="space-y-4">
             <div>
-              <label class="form-label">Clé API TwelveData</label>
+              <label class="form-label">Clé API</label>
               <input id="tdKeyInSettings" type="text" class="form-input w-full" value="${_apiKey}" />
             </div>
-            <p class="text-xs" style="color:var(--text-faint)">
-              Les symboles analysés sont ceux de ta <strong style="color:var(--text-muted)">watchlist (page Marchés)</strong>.
-              Ajoute des favoris là-bas pour les inclure ici (max 10).
-            </p>
             <p class="text-xs" style="color:var(--text-faint)">
               Plan gratuit TwelveData : 800 appels/jour. Scan auto toutes les 15 min = ~100 appels/jour pour 8 symboles.
             </p>
@@ -273,13 +270,68 @@ const Signals = (() => {
 
   function openSettings() { App.openModal('signalsSettingsModal'); }
 
-  // ── WATCHLIST ─────────────────────────────────────────────
+  function _resetSymbols() {
+    localStorage.removeItem(SYM_STORE);
+    const container = document.getElementById('page-signals');
+    if (container) renderMain(container);
+  }
+
+  // ── SÉLECTION DE SYMBOLES ─────────────────────────────────
   function getWatchSymbols() {
     try {
-      const wl = JSON.parse(localStorage.getItem('tl_markets_watchlist') || '[]');
-      const valid = wl.filter(s => TD_SYM[s]).slice(0, 10);
-      return valid.length ? valid : DEFAULTS.filter(s => TD_SYM[s]);
-    } catch { return DEFAULTS; }
+      const saved = JSON.parse(localStorage.getItem(SYM_STORE) || '[]');
+      const valid = saved.filter(s => TD_SYM[s]);
+      return valid.length ? valid : [...DEFAULTS];
+    } catch { return [...DEFAULTS]; }
+  }
+
+  function toggleSymbol(sym) {
+    const current = getWatchSymbols();
+    const idx = current.indexOf(sym);
+    let next;
+    if (idx >= 0) {
+      if (current.length <= 1) return; // garder au moins 1 symbole
+      next = current.filter(s => s !== sym);
+    } else {
+      if (current.length >= 10) return; // max 10
+      next = [...current, sym];
+    }
+    localStorage.setItem(SYM_STORE, JSON.stringify(next));
+    // Rafraîchir l'UI sans rescanner
+    const container = document.getElementById('page-signals');
+    if (container) renderMain(container);
+  }
+
+  function renderSymbolPicker(selected) {
+    const groups = [
+      { label: 'Forex majeurs', syms: ['EURUSD','GBPUSD','USDJPY','USDCHF','AUDUSD','USDCAD','NZDUSD'] },
+      { label: 'Forex croisés', syms: ['EURGBP','EURJPY','GBPJPY','EURCHF','AUDJPY'] },
+      { label: 'Matières premières', syms: ['XAUUSD','XAGUSD','USOIL','UKOIL'] },
+      { label: 'Cryptos',       syms: ['BTCUSD','ETHUSD','SOLUSD'] },
+      { label: 'Indices',       syms: ['NAS100','US500','US30'] },
+    ];
+    const sel = new Set(selected);
+    const rows = groups.map(g => {
+      const chips = g.syms.map(s => {
+        const on = sel.has(s);
+        return `<button onclick="Signals.toggleSymbol('${s}')" class="text-xs px-2.5 py-1 rounded-full font-semibold transition"
+          style="background:${on ? 'var(--brand)' : 'var(--bg-input)'};color:${on ? '#fff' : 'var(--text-faint)'};border:1px solid ${on ? 'var(--brand)' : 'var(--border)'}">
+          ${s}
+        </button>`;
+      }).join('');
+      return `<div class="mb-2">
+        <p class="text-xs mb-1.5 font-medium" style="color:var(--text-faint)">${g.label}</p>
+        <div class="flex flex-wrap gap-1.5">${chips}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="stat-card space-y-1">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold" style="color:var(--text-primary)">Symboles analysés <span class="font-normal text-xs" style="color:var(--text-faint)">(${selected.length}/10)</span></h3>
+        <button onclick="Signals._resetSymbols()" class="text-xs" style="color:var(--text-faint)">Réinitialiser</button>
+      </div>
+      ${rows}
+    </div>`;
   }
 
   // ── AUTO-SCAN ─────────────────────────────────────────────
@@ -505,5 +557,5 @@ const Signals = (() => {
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  return { render, scan, saveKey, saveKeyFromSettings, openSettings, setTf };
+  return { render, scan, saveKey, saveKeyFromSettings, openSettings, setTf, toggleSymbol, _resetSymbols };
 })();
