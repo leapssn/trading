@@ -562,7 +562,83 @@ const Signals = (() => {
     return { adx: adxVal, pdi: pDI[pDI.length - 1], mdi: mDI[mDI.length - 1] };
   }
 
-  // ── DÉTECTION DE SIGNAL (13 conditions possibles) ─────────
+
+  // ── SMART MONEY CONCEPTS (OB / FVG / OTE) ────────────────
+  function findSmcZones(candles, atrNow) {
+    const n     = candles.length;
+    const price = candles[n - 1].close;
+
+    // ── Order Blocks ─────────────────────────────────────────
+    // Bullish OB : derniere bougie bearish avant un deplacement haussier > 2 ATR
+    // Bearish OB : derniere bougie bullish avant un deplacement baissier > 2 ATR
+    let bullOB = null, bearOB = null;
+    const obLB = Math.min(60, n - 3);
+    for (let i = n - 2; i >= n - obLB; i--) {
+      const c = candles[i];
+      if (!bullOB && c.close < c.open) {
+        let peak = c.high;
+        for (let j = i + 1; j < Math.min(i + 8, n); j++) peak = Math.max(peak, candles[j].high);
+        if (peak - c.high > atrNow * 2) {
+          bullOB = { high: Math.max(c.open, c.close), low: Math.min(c.open, c.close) };
+        }
+      }
+      if (!bearOB && c.close > c.open) {
+        let trough = c.low;
+        for (let j = i + 1; j < Math.min(i + 8, n); j++) trough = Math.min(trough, candles[j].low);
+        if (c.low - trough > atrNow * 2) {
+          bearOB = { high: Math.max(c.open, c.close), low: Math.min(c.open, c.close) };
+        }
+      }
+      if (bullOB && bearOB) break;
+    }
+
+    // ── Fair Value Gaps ───────────────────────────────────────
+    // Bullish FVG : candles[i-2].high < candles[i].low  → gap haussier
+    // Bearish FVG : candles[i-2].low  > candles[i].high → gap baissier
+    let bullFVG = null, bearFVG = null;
+    const fvgLB = Math.min(40, n - 2);
+    for (let i = n - 1; i >= n - fvgLB; i--) {
+      if (i < 2) break;
+      if (!bullFVG) {
+        const gap = candles[i].low - candles[i - 2].high;
+        if (gap > atrNow * 0.25) bullFVG = { low: candles[i - 2].high, high: candles[i].low };
+      }
+      if (!bearFVG) {
+        const gap = candles[i - 2].low - candles[i].high;
+        if (gap > atrNow * 0.25) bearFVG = { low: candles[i].high, high: candles[i - 2].low };
+      }
+      if (bullFVG && bearFVG) break;
+    }
+
+    // ── OTE — Optimal Trade Entry (Fibonacci 61.8–78.6%) ─────
+    // Cherche le dernier swing H/L sur 50 bougies
+    const w   = candles.slice(Math.max(0, n - 50));
+    let swH = -Infinity, swL = Infinity, swHi = 0, swLi = 0;
+    for (let i = 0; i < w.length; i++) {
+      if (w[i].high > swH) { swH = w[i].high; swHi = i; }
+      if (w[i].low  < swL) { swL = w[i].low;  swLi = i; }
+    }
+    const range  = swH - swL;
+    let bullOTE = false, bearOTE = false;
+    if (range > atrNow) {
+      // Tendance haussiere : low avant high → pullback dans zone OTE
+      if (swLi < swHi) {
+        const oteH = swH - range * 0.618;
+        const oteL = swH - range * 0.786;
+        bullOTE = price >= oteL * 0.999 && price <= oteH * 1.001;
+      }
+      // Tendance baissiere : high avant low → rebond dans zone OTE
+      if (swHi < swLi) {
+        const oteL = swL + range * 0.618;
+        const oteH = swL + range * 0.786;
+        bearOTE = price >= oteL * 0.999 && price <= oteH * 1.001;
+      }
+    }
+
+    return { bullOB, bearOB, bullFVG, bearFVG, bullOTE, bearOTE };
+  }
+
+  // ── DÉTECTION DE SIGNAL (16 conditions possibles) ─────────
   function detectSignal(appSym, tf, candles) {
     const closes = candles.map(c => c.close);
     const n      = closes.length;
@@ -594,6 +670,9 @@ const Signals = (() => {
 
     if (!ema20 || !ema50 || !ema200 || !rsiNow || !macdN || !sigN
         || !atrNow || kNow == null || dNow == null || !bbUpper) return null;
+
+    // Smart Money Concepts
+    const { bullOB, bearOB, bullFVG, bearFVG, bullOTE, bearOTE } = findSmcZones(candles, atrNow);
 
     const price      = closes[n - 1];
     const lastCandle = candles[n - 1];
@@ -642,6 +721,11 @@ const Signals = (() => {
     if (lastCandle.close > lastCandle.open)              lc.push('Bougie de clôture haussière');
     if (isHammer || isBullEng)                           lc.push(isHammer ? 'Pattern : Marteau' : 'Pattern : Engloutissant haussier');
     if (volSpike)                                        lc.push('Volume : pic de confirmation');
+    if (bullOTE)                                         lc.push('OTE : retracement Fibonacci 61.8-78.6%');
+    if (bullOB && price >= bullOB.low && price <= bullOB.high * 1.001)
+                                                         lc.push('Order Block haussier : zone institutionnelle');
+    if (bullFVG && price <= bullFVG.high && price >= bullFVG.low * 0.99)
+                                                         lc.push('FVG haussier : desequilibre a combler');
 
     // ── Conditions SHORT (13 max) ─────────────────────────
     const sc = [];
@@ -658,6 +742,11 @@ const Signals = (() => {
     if (lastCandle.close < lastCandle.open)              sc.push('Bougie de clôture baissière');
     if (isStar || isBearEng)                             sc.push(isStar ? 'Pattern : Étoile filante' : 'Pattern : Engloutissant baissier');
     if (volSpike)                                        sc.push('Volume : pic de confirmation');
+    if (bearOTE)                                         sc.push('OTE : retracement Fibonacci 61.8-78.6%');
+    if (bearOB && price >= bearOB.low * 0.999 && price <= bearOB.high)
+                                                         sc.push('Order Block baissier : zone institutionnelle');
+    if (bearFVG && price >= bearFVG.low && price <= bearFVG.high * 1.01)
+                                                         sc.push('FVG baissier : desequilibre a combler');
 
     // Trigger obligatoire : MACD, Stochastique ou RSI extrême
     const hasLongTrigger  = lc.some(c => c.includes('MACD') || c.includes('survente') || c.includes('Stochastique'));
@@ -674,7 +763,7 @@ const Signals = (() => {
     }
 
     const matchCount = conditions.length;
-    const score = matchCount >= 10 ? 'HIGH' : matchCount >= 8 ? 'MEDIUM' : 'LOW';
+    const score = matchCount >= 11 ? 'HIGH' : matchCount >= 9 ? 'MEDIUM' : 'LOW';
 
     // Nom du setup
     const hasMacd    = conditions.some(c => c.includes('MACD'));
@@ -682,8 +771,16 @@ const Signals = (() => {
     const hasRSIext  = conditions.some(c => c.includes('survente') || c.includes('surachat'));
     const hasBB      = conditions.some(c => c.includes('Bollinger'));
     const hasPattern = conditions.some(c => c.includes('Pattern'));
+    const hasOB      = conditions.some(c => c.includes('Order Block'));
+    const hasFVG     = conditions.some(c => c.includes('FVG'));
+    const hasOTE     = conditions.some(c => c.includes('OTE'));
+    const hasSMC     = hasOB || hasFVG || hasOTE;
     let setup = 'Multi-confluences';
-    if (hasMacd && hasStoch)     setup = 'MACD + Stochastique';
+    if (hasSMC && hasMacd)       setup = 'SMC + MACD Crossover';
+    else if (hasSMC && hasStoch) setup = 'SMC + Stochastique';
+    else if (hasSMC && hasOTE)   setup = 'OTE + Order Flow';
+    else if (hasSMC)              setup = 'Smart Money Concepts';
+    else if (hasMacd && hasStoch) setup = 'MACD + Stochastique';
     else if (hasMacd)             setup = 'MACD Crossover';
     else if (hasRSIext && hasBB)  setup = 'Rebond RSI + Bollinger';
     else if (hasPattern)          setup = 'Pattern + EMAs';
@@ -705,7 +802,7 @@ const Signals = (() => {
       symbol: appSym, tf, direction, setup,
       entry, sl, tp1, tp2, tp3, decimals,
       score, matchCount,
-      conditions: conditions.slice(0, 8),
+      conditions: conditions.slice(0, 10),
       time: Date.now(),
     };
   }
